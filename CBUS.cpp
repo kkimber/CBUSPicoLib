@@ -1663,7 +1663,7 @@ void CBUSbase::processEnumeration(void)
       }
 
       // Have we found a free ID?
-      if ((enumResult = m_enumResponses[i]) != 0xFF)
+      if ((i < ENUM_ARRAY_SIZE) && (enumResult = m_enumResponses[i]) != 0xFF)
       {
          // Bit shift through byte to search for bit to determine the Can ID
          for (newCanId = i*8; (enumResult & 0x01); newCanId++)
