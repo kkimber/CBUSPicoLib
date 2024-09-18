@@ -1657,7 +1657,7 @@ void CBUSbase::processEnumeration(void)
       uint8_t newCanId;
 
       // Find byte in array with first free flag. Skip over 0xFF bytes (i.e all Node ID's used)
-      for (i=0; (m_enumResponses[i] == 0xFF) && (i < ENUM_ARRAY_SIZE); i++)
+      for (i=0; (i < ENUM_ARRAY_SIZE) && (m_enumResponses[i] == 0xFF); i++)
       {
          ;
       }
