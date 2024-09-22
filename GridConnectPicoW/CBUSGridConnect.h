@@ -40,6 +40,8 @@
 #pragma once
 
 #include <cstdint>
+
+#include "CBUSGridConnectBase.h"
 #include "CBUSCircularBuffer.h"
 
 #include "pico/cyw43_arch.h"
