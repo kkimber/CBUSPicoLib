@@ -86,7 +86,7 @@ typedef struct
 /// class to support CBUS Grid Connect protocol
 ///
 
-class CBUSGridConnect
+class CBUSGridConnect : public CBUSGridConnectBase
 {
 public:
    CBUSGridConnect();
