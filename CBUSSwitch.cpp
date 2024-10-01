@@ -42,6 +42,9 @@
 
 #include <pico/stdlib.h>
 
+/// Debounce delay of 20ms for all switches
+constexpr uint32_t DEFAULT_DEBOUNCE_MS {20UL};
+
 ///
 /// A class to encapsulate a physical pushbutton switch, with non-blocking processing
 ///
@@ -51,11 +54,14 @@ CBUSSwitch::CBUSSwitch() : m_configured{false},
                            m_pressedState{false},
                            m_currentState{true},
                            m_lastState{false},
+                           m_activeState{true},
                            m_stateChanged{false},
+                           m_debounceStartTime{0x0UL},
                            m_lastStateChangeTime{0x0UL},
                            m_lastStateDuration{0x0UL},
                            m_prevReleaseTime{0x0UL},
-                           m_prevStateDuration{0x0UL}
+                           m_prevStateDuration{0x0UL},
+                           m_debounceDuration{DEFAULT_DEBOUNCE_MS}
 {
 }
 
@@ -81,11 +87,17 @@ void CBUSSwitch::setPin(const uint8_t pin, const bool pressedState = false)
    {
       // Active low, set pull UP
       gpio_set_pulls(m_pin, true, false);
+
+      // Init active state as "off"
+      m_activeState = true;
    }
    else
    {
       // Active high, set pull DOWN
       gpio_set_pulls(m_pin, false, true);
+
+      // Init active state as "off"
+      m_activeState = false;
    }
 
    // Switch has now been configured
@@ -101,33 +113,44 @@ void CBUSSwitch::setPin(const uint8_t pin, const bool pressedState = false)
 ///
 void CBUSSwitch::run()
 {
-   // check for state change
-
    // read the pin
    m_currentState = _readPin();
 
-   // has state changed ?
+   // has state changed?
    if (m_currentState != m_lastState)
    {
-      // yes - state has changed since last call to this method
-      m_lastState = m_currentState;
-      m_prevStateDuration = m_lastStateDuration;
-      m_lastStateDuration = SystemTick::GetMilli() - m_lastStateChangeTime;
-      m_lastStateChangeTime = SystemTick::GetMilli();
-      m_stateChanged = true;
+      // record time of change of state
+      m_debounceStartTime = SystemTick::GetMilli();
+   }
 
-      // has key been released
-      if (m_currentState != m_pressedState)
-      {
-         // save release time
-         m_prevReleaseTime = m_lastStateChangeTime;
-      }
-   }
-   else
+   // check for persistent state exceeding debounce time
+   if ((SystemTick::GetMilli() - m_debounceStartTime) >= m_debounceDuration)
    {
-      // no -- state has not changed
-      m_stateChanged = false;
-   }
+      // has state changed?
+      if (m_currentState != m_activeState)
+      {
+         // yes - state has changed since last call to this method
+         m_activeState = m_currentState;
+         m_prevStateDuration = m_lastStateDuration;
+         m_lastStateDuration = SystemTick::GetMilli() - m_lastStateChangeTime;
+         m_lastStateChangeTime = SystemTick::GetMilli();
+         m_stateChanged = true;
+
+         // has key been released
+         if (m_currentState != m_pressedState)
+         {
+            // save release time
+            m_prevReleaseTime = m_lastStateChangeTime;
+         }
+      }
+      else
+      {
+         // no -- state has not changed
+         m_stateChanged = false;
+      }
+  }
+
+  m_lastState = m_currentState;
 }
 
 ///
@@ -164,8 +187,8 @@ bool CBUSSwitch::stateChanged() const
 ///
 bool CBUSSwitch::getState() const
 {
-   // return the current switch state read
-   return m_currentState;
+   // return the current switch state read (after debounce)
+   return m_activeState;
 }
 
 ///
@@ -177,7 +200,7 @@ bool CBUSSwitch::getState() const
 bool CBUSSwitch::isPressed() const
 {
    // is the switch pressed ?
-   return (m_currentState == m_pressedState);
+   return (m_activeState == m_pressedState);
 }
 
 ///
@@ -220,6 +243,15 @@ uint32_t CBUSSwitch::getLastStateChangeTime()
 void CBUSSwitch::resetCurrentDuration()
 {
    m_lastStateChangeTime = SystemTick::GetMilli();
+}
+
+///
+/// @brief Set the debounce duration for all state transistions
+/// @param debounceDuration debounce duration to use - in milliseconds
+///
+void CBUSSwitch::setDebounceDuration(uint32_t debounceDuration)
+{
+   m_debounceDuration = debounceDuration;
 }
 
 ///

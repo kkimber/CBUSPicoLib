@@ -42,9 +42,9 @@
 
 #include <pico/stdlib.h>
 
-constexpr uint16_t BLINK_RATE = 500;         ///< flash at 1Hz, 500mS on, 500mS off
-constexpr uint16_t SHORT_FILCKER_TIME = 100; ///< short flicker duration 100mS - Non consumed CAN event
-constexpr uint16_t LONG_FLICKER_TIME = 500;  ///< long flicker duration 500mS - Consumed CAN event
+constexpr uint16_t DEFAULT_BLINK_RATE = 500;         ///< flash at 1Hz, 500mS on, 500mS off
+constexpr uint16_t DEFAULT_SHORT_FLICKER_TIME = 100; ///< short flicker duration 100mS - Non consumed CAN event
+constexpr uint16_t DEFAULT_LONG_FLICKER_TIME = 500;  ///< long flicker duration 500mS - Consumed CAN event
 
 ///
 /// Class to control an individual LED, with non-blocking control
@@ -57,10 +57,11 @@ CBUSLED::CBUSLED() : m_configured{false},
                      m_pulse{false},
                      m_lastTime{0x0UL},
                      m_pulseStart{0x0UL},
-                     m_pulseDuration{0x0U}
-{
-}
-
+                     m_pulseDuration{0x0U},
+                     m_msBlinkDuration{DEFAULT_BLINK_RATE},
+                     m_msPulseShortDuration{DEFAULT_SHORT_FLICKER_TIME},
+                     m_msPulseLongDuration{DEFAULT_LONG_FLICKER_TIME}
+{}
 ///
 /// @brief Set the pin for this LED
 ///        configures the pin as a GPIO ouput and sets the output LOW
@@ -133,11 +134,11 @@ void CBUSLED::pulse(bool bShort)
 {
    if (bShort)
    {
-      m_pulseDuration = SHORT_FILCKER_TIME;
+      m_pulseDuration = m_msPulseShortDuration;
    }
    else
    {
-      m_pulseDuration = LONG_FLICKER_TIME;
+      m_pulseDuration = m_msPulseLongDuration;
    }
 
    m_pulse = true;
@@ -149,6 +150,33 @@ void CBUSLED::pulse(bool bShort)
 }
 
 ///
+/// @brief Set the blink rate of the LED
+/// @param msBlink required blink rate in milliseconds
+///
+void CBUSLED::setBlinkRate(uint16_t msBlink)
+{
+   m_msBlinkDuration = msBlink;
+}
+
+///
+/// @brief Set the short pulse rate of the LED
+/// @param msPulseShort required short pulse rate in milliseconds
+///
+void CBUSLED::setShortPulseDuration(uint16_t msPulseShort)
+{
+   m_msPulseShortDuration = msPulseShort;
+}
+
+///
+/// @brief Set the long pulse rate of the LED
+/// @param msPulseLong required long pulse rate in milliseconds
+///
+void CBUSLED::setLongPulseDuration(uint16_t msPulseLong)
+{
+   m_msPulseLongDuration = msPulseLong;
+}
+
+///
 /// @brief Process the LED based on its configured state,
 ///        must be called frequently if the LED is set to blink or pulse
 ///
@@ -157,7 +185,7 @@ void CBUSLED::run()
    // blinking
    if (m_blink)
    {
-      if ((SystemTick::GetMilli() - m_lastTime) >= BLINK_RATE)
+      if ((SystemTick::GetMilli() - m_lastTime) >= m_msBlinkDuration)
       {
          toggle();
          m_lastTime = SystemTick::GetMilli();

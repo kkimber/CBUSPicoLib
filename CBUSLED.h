@@ -58,6 +58,9 @@ public:
    void blink(void);
    void run(void);
    void pulse(bool bShort=true);
+   void setBlinkRate(uint16_t msBlink);
+   void setShortPulseDuration(uint16_t msPulseShort);
+   void setLongPulseDuration(uint16_t msPulseLong);
 
 private:
    bool m_configured;
@@ -69,4 +72,8 @@ private:
    uint32_t m_pulseStart;
    uint32_t m_pulseDuration;
    void _write(void);
+
+   uint16_t m_msBlinkDuration;
+   uint16_t m_msPulseShortDuration;
+   uint16_t m_msPulseLongDuration;
 };

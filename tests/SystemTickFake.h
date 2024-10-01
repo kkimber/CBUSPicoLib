@@ -37,44 +37,18 @@
 
 */
 
-#pragma once
-
-#include <cstdint>
+#include "SystemTick.h"
 
 //
-/// Class to encapsulate a non-blocking switch class
+/// Force system tick time to specified value
+/// @param tNow new system tick time value
 //
+void setFakeSystemTime(uint64_t tNow);
 
-class CBUSSwitch
-{
+//
+/// Increment system tick time by specified amount
+/// @param tInc amount to increment system time by
+//
+void incFakeSystemTime(uint64_t tInc);
 
-public:
-   CBUSSwitch();
-   void setPin(const uint8_t pin, const bool pressedState);
-   void run(void);
-   void reset(void);
-   bool stateChanged(void) const;
-   bool getState(void) const;
-   bool isPressed(void) const;
-   uint32_t getCurrentStateDuration(void);
-   uint32_t getLastStateDuration(void);
-   uint32_t getLastStateChangeTime(void);
-   void resetCurrentDuration(void);
-   void setDebounceDuration(uint32_t debounceDuration);
 
-private:
-   bool m_configured;
-   uint8_t m_pin;
-   bool m_pressedState;
-   bool m_currentState;
-   bool m_lastState;
-   bool m_activeState;
-   bool m_stateChanged;
-   uint32_t m_debounceStartTime;
-   uint32_t m_lastStateChangeTime;
-   uint32_t m_lastStateDuration;
-   uint32_t m_prevReleaseTime;
-   uint32_t m_prevStateDuration;
-   uint32_t m_debounceDuration;
-   bool _readPin(void);
-};

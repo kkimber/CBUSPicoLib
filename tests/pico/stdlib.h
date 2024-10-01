@@ -39,42 +39,27 @@
 
 #pragma once
 
-#include <cstdint>
+// Fake Pico SDK functions for unit testing
 
-//
-/// Class to encapsulate a non-blocking switch class
-//
+typedef unsigned int uint;
 
-class CBUSSwitch
+#define GPIO_OUT 1
+#define GPIO_IN 0
+
+void gpio_init(uint gpio);
+
+static inline void gpio_set_dir(uint gpio, bool out)
 {
+   // Fake function stub
+}
 
-public:
-   CBUSSwitch();
-   void setPin(const uint8_t pin, const bool pressedState);
-   void run(void);
-   void reset(void);
-   bool stateChanged(void) const;
-   bool getState(void) const;
-   bool isPressed(void) const;
-   uint32_t getCurrentStateDuration(void);
-   uint32_t getLastStateDuration(void);
-   uint32_t getLastStateChangeTime(void);
-   void resetCurrentDuration(void);
-   void setDebounceDuration(uint32_t debounceDuration);
+static inline void gpio_put(uint gpio, bool value)
+{
+   // Fake function stub
+}
 
-private:
-   bool m_configured;
-   uint8_t m_pin;
-   bool m_pressedState;
-   bool m_currentState;
-   bool m_lastState;
-   bool m_activeState;
-   bool m_stateChanged;
-   uint32_t m_debounceStartTime;
-   uint32_t m_lastStateChangeTime;
-   uint32_t m_lastStateDuration;
-   uint32_t m_prevReleaseTime;
-   uint32_t m_prevStateDuration;
-   uint32_t m_debounceDuration;
-   bool _readPin(void);
-};
+bool gpio_get(uint gpio);
+
+void gpio_set_pulls (uint gpio, bool up, bool down);
+
+void setFakePinState(bool bState);

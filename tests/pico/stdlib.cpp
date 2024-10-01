@@ -37,44 +37,37 @@
 
 */
 
-#pragma once
+#include "stdlib.h"
 
-#include <cstdint>
+static bool pinState = false;
 
-//
-/// Class to encapsulate a non-blocking switch class
-//
-
-class CBUSSwitch
+void setFakePinState(bool bState)
 {
+   pinState = bState;
+}
 
-public:
-   CBUSSwitch();
-   void setPin(const uint8_t pin, const bool pressedState);
-   void run(void);
-   void reset(void);
-   bool stateChanged(void) const;
-   bool getState(void) const;
-   bool isPressed(void) const;
-   uint32_t getCurrentStateDuration(void);
-   uint32_t getLastStateDuration(void);
-   uint32_t getLastStateChangeTime(void);
-   void resetCurrentDuration(void);
-   void setDebounceDuration(uint32_t debounceDuration);
+void gpio_init(uint gpio)
+{
+   // Fake function stub
+}
 
-private:
-   bool m_configured;
-   uint8_t m_pin;
-   bool m_pressedState;
-   bool m_currentState;
-   bool m_lastState;
-   bool m_activeState;
-   bool m_stateChanged;
-   uint32_t m_debounceStartTime;
-   uint32_t m_lastStateChangeTime;
-   uint32_t m_lastStateDuration;
-   uint32_t m_prevReleaseTime;
-   uint32_t m_prevStateDuration;
-   uint32_t m_debounceDuration;
-   bool _readPin(void);
-};
+void gpio_set_pulls(uint gpio, bool up, bool down)
+{
+   // Fake function stub
+   if (up)
+   {
+      pinState = true;
+   }
+
+   if (down)
+   {
+      pinState = false;
+   }
+}
+
+bool gpio_get(uint gpio)
+{
+   // Fake function stub
+   return pinState;
+}
+
