@@ -10,7 +10,7 @@ include_directories("..")
 # vscode cmake tools (necessary only in old version ??)
  include(CMakeToolsHelpers OPTIONAL)
 
-# CBUS LED Tests
+# CBUS LED Tests ================================
  add_executable(CBUSLEDtest
    ../CBUSLED.cpp
    ./pico/stdlib.cpp
@@ -22,7 +22,7 @@ target_link_libraries(CBUSLEDtest gtest gmock)
 # CTest
 add_test(CBUSLED CBUSLEDtest)
 
-# CBUS Switch Tests
+# CBUS Switch Tests =============================
 add_executable(CBUSSwitchtest
    ../CBUSSwitch.cpp
    ./pico/stdlib
@@ -33,3 +33,16 @@ target_link_libraries(CBUSSwitchtest gtest gmock)
 
 # CTest
 add_test(CBUSSwitch CBUSSwitchtest)
+
+
+# CBUS Circular Buffer Tests ====================
+add_executable(CBUSCircularBuffertest
+   ../CBUSCircularBuffer.cpp
+   ./pico/stdlib
+   ./SystemTickFake
+   ./CBUSCircularBuffer_test.cpp
+)
+target_link_libraries(CBUSCircularBuffertest gtest gmock)
+
+# CTest
+add_test(CBUSCircularBuffer CBUSCircularBuffertest)

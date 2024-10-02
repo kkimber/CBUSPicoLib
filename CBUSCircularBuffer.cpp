@@ -1,3 +1,42 @@
+/*
+   CBUS Module Library - RasberryPi Pico SDK port
+   Copyright (c) Kevin Kimber 2023
+
+   Based on work by Duncan Greenwood
+   Copyright (C) Duncan Greenwood 2017 (duncan_greenwood@hotmail.com)
+
+   This work is licensed under the:
+      Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International License.
+   To view a copy of this license, visit:
+      http://creativecommons.org/licenses/by-nc-sa/4.0/
+   or send a letter to Creative Commons, PO Box 1866, Mountain View, CA 94042, USA.
+
+   License summary:
+    You are free to:
+      Share, copy and redistribute the material in any medium or format
+      Adapt, remix, transform, and build upon the material
+
+    The licensor cannot revoke these freedoms as long as you follow the license terms.
+
+    Attribution : You must give appropriate credit, provide a link to the license,
+                  and indicate if changes were made. You may do so in any reasonable manner,
+                  but not in any way that suggests the licensor endorses you or your use.
+
+    NonCommercial : You may not use the material for commercial purposes. **(see note below)
+
+    ShareAlike : If you remix, transform, or build upon the material, you must distribute
+                 your contributions under the same license as the original.
+
+    No additional restrictions : You may not apply legal terms or technological measures that
+                                 legally restrict others from doing anything the license permits.
+
+   ** For commercial use, please contact the original copyright holder(s) to agree licensing terms
+
+    This software is distributed in the hope that it will be useful, but WITHOUT ANY
+    WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE
+
+*/
+
 #include "CBUSCircularBuffer.h"
 #include "SystemTick.h"
 
@@ -14,13 +53,21 @@ CBUSCircularBuffer::CBUSCircularBuffer(uint8_t num_items) : m_full{false},
                                                             m_tail{0x0U},
                                                             m_capacity{num_items},
                                                             m_size{0x0U},
-                                                            m_hwm{0x0U},
+                                                            m_highWaterMark{0x0U},
                                                             m_puts{0x0UL},
                                                             m_gets{0x0UL},
                                                             m_overflows{0x0UL}
 {
-   // Allocating in constructor, so prevent exception if out of memory
-   m_buffer = new (std::nothrow) cbus_frame_buffer_t[num_items];
+   // Buffer must contain at least one item
+   if (num_items > 0)
+   {
+      // Allocating in constructor, so prevent exception if out of memory
+      m_buffer = new (std::nothrow) cbus_frame_buffer_t[num_items];
+   }
+   else
+   {
+      m_buffer = nullptr;
+   }
 }
 
 /// Destroy a CBUSCircularBuffer object instance
@@ -72,7 +119,7 @@ void __attribute__((section(".RAM"))) CBUSCircularBuffer::put(const CANFrame &it
    m_head = (m_head + 1) % m_capacity;
    m_full = m_head == m_tail;
    m_size = size();
-   m_hwm = (m_size > m_hwm) ? m_size : m_hwm;
+   m_highWaterMark = (m_size > m_highWaterMark) ? m_size : m_highWaterMark;
    ++m_puts;
 }
 
@@ -155,9 +202,9 @@ void CBUSCircularBuffer::clear(void)
 ///
 /// @return uint8_t maximum number of items seen in the circular buffer
 ///
-uint8_t CBUSCircularBuffer::hwm(void)
+uint8_t CBUSCircularBuffer::highWaterMark(void)
 {
-   return m_hwm;
+   return m_highWaterMark;
 }
 
 ///

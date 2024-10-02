@@ -5,8 +5,6 @@ project(CBUSPicoLibTest)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 set(CMAKE_DEFAULT_STARTUP_PROJECT CBUSPicoLibtest)
 
-#include_directories("./turtle")
-
 enable_testing()
 
 # Download and unpack googletest at configure time

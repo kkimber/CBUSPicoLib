@@ -96,7 +96,7 @@ public:
    uint8_t free_slots(void);
    uint32_t puts(void);
    uint32_t gets(void);
-   uint8_t hwm(void);
+   uint8_t highWaterMark(void);
    uint32_t overflows(void);
 
 private:
@@ -105,7 +105,7 @@ private:
    uint8_t m_tail;
    uint8_t m_capacity;
    uint8_t m_size;
-   uint8_t m_hwm;
+   uint8_t m_highWaterMark;
    uint32_t m_puts;
    uint32_t m_gets;
    uint32_t m_overflows;
