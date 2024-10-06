@@ -74,7 +74,7 @@ constexpr uint8_t DEFAULT_CANID = 1U; ///< Default CAN ID (for SLiM), likely to 
 constexpr uint8_t DEFAULT_NN = 0U;    ///< Default Node Number, modules should start with a node number of zero
 
 /// Memory offset of flash in global memory map (flash is memory mapped)
-constexpr uint32_t FLASH_BASE = (XIP_BASE + PICO_FLASH_SIZE_BYTES) - FLASH_SECTOR_SIZE;
+uintptr_t FLASH_BASE = (XIP_BASE + PICO_FLASH_SIZE_BYTES) - FLASH_SECTOR_SIZE;
 
 /// Offset into flash where our data is located (for write)
 constexpr uint32_t FLASH_OFFSET = PICO_FLASH_SIZE_BYTES - FLASH_SECTOR_SIZE;

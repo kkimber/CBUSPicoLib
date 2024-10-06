@@ -279,7 +279,7 @@ public:
    void subscribe(uint8_t *stream_ids, const uint8_t num_stream_ids, void *receive_buffer, const uint32_t receive_buffer_len, void (*messagehandler)(void *fragment, const uint32_t fragment_len, const uint8_t stream_id, const uint8_t status));
    bool process(void);
    virtual void processReceivedMessageFragment(const CANFrame &frame);
-   bool is_sending(void);
+   bool isSending(void);
    void setDelay(uint8_t delay_in_millis);
    void setTimeout(uint32_t timeout_in_millis);
 
@@ -355,7 +355,7 @@ public:
    bool process(void);
    void subscribe(uint8_t *stream_ids, const uint8_t num_stream_ids, void (*messagehandler)(void *msg, uint32_t msg_len, uint8_t stream_id, uint8_t status));
    void processReceivedMessageFragment(const CANFrame &frame) override;
-   uint8_t is_sending(void);
+   uint8_t isSending(void);
    void use_crc(bool use_crc);
 
 private:

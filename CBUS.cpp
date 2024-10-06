@@ -1028,7 +1028,7 @@ bool CBUSbase::parseFLiMCmd(CANFrame &msg)
 #endif
       case OPC_QNN:
          QNNrespond(); // Respond to node query 	//  ??? update to do new spec response agreed
-         cmdProcessed = TIMER_PAUSE_RESET;
+         cmdProcessed = true;
          break;
       }
    }
