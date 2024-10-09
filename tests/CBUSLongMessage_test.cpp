@@ -40,12 +40,8 @@
 #include <cstdint>
 #include <cstdlib>
 
-// System Mocks
-#include "SystemTickFake.h"
-#include "flash_mock.h"
-
 // CBUS Mocks
-#include "CBUS_mock.h"
+#include "mocks/CBUS_mock.h"
 
 #include "CBUS.h"
 #include "CBUSLED.h"
@@ -55,7 +51,8 @@
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 
-// Pico SDK header / stubs
+#include "mocklib.h"
+
 #include <pico/stdlib.h>
 
 using testing::_;
@@ -102,6 +99,19 @@ TEST(CBUSLongMessage, sendMsg)
    static constexpr const auto priority {11};
    static constexpr const auto delay{1};
 
+   uint64_t sysTime = 0ULL;
+
+   MockPicoSdk mockPicoSdk;
+   mockPicoSdkApi.mockPicoSdk = &mockPicoSdk;
+
+   // Manage system time via lambda
+   EXPECT_CALL(mockPicoSdk, get_absolute_time)
+       .WillRepeatedly(testing::Invoke(
+        [&sysTime]() -> uint64_t {
+            return sysTime * 1000; // time specified in milliseconds
+        }
+    ));
+
    CBUSConfig config;
    CBUSMock cbus(config);
 
@@ -118,7 +128,7 @@ TEST(CBUSLongMessage, sendMsg)
    // Transmit header
    ASSERT_TRUE(longMsg.process());
    ASSERT_TRUE(longMsg.isSending());
-   incFakeSystemTime(delay);
+   sysTime += delay;
 
    // Try sending another message before completion
    ASSERT_FALSE(longMsg.sendLongMessage(msg1, sizeof(msg1), streamID+1, priority));
@@ -126,7 +136,7 @@ TEST(CBUSLongMessage, sendMsg)
    // Transmit segment#1 - should complete sending
    ASSERT_TRUE(longMsg.process());
    ASSERT_FALSE(longMsg.isSending());
-   incFakeSystemTime(delay);
+   sysTime += delay;
 
    // Long message #2, should be send as 6x segments of 5 chars each
    //             1----2----3----4----5----6----
@@ -139,7 +149,7 @@ TEST(CBUSLongMessage, sendMsg)
    while (longMsg.isSending()) 
    {
       ASSERT_TRUE(longMsg.process());
-      incFakeSystemTime(delay);
+      sysTime += delay;
       nCalls++;
    }
    
@@ -155,6 +165,18 @@ TEST(CBUSLongMessage, receive)
 
    uint8_t streamIDs[numStreams] {0,1,2,3,4};
    uint8_t rcvBuffer[streamLen] {};
+   uint64_t sysTime = 0ULL;
+
+   MockPicoSdk mockPicoSdk;
+   mockPicoSdkApi.mockPicoSdk = &mockPicoSdk;
+
+   // Manage system time via lambda
+   EXPECT_CALL(mockPicoSdk, get_absolute_time)
+       .WillRepeatedly(testing::Invoke(
+        [&sysTime]() -> uint64_t {
+            return sysTime * 1000; // time specified in milliseconds
+        }
+    ));
 
    CBUSConfig config;
    CBUSMock cbus(config);
@@ -200,7 +222,7 @@ TEST(CBUSLongMessage, receive)
    longMsg.setTimeout(1);
    longMsg.processReceivedMessageFragment(header);
    ASSERT_TRUE(longMsg.process());
-   incFakeSystemTime(10);
+   sysTime += 10;
    ASSERT_TRUE(longMsg.process());
 
    // Receive timeout after first segment
@@ -209,7 +231,7 @@ TEST(CBUSLongMessage, receive)
    longMsg.processReceivedMessageFragment(seg1);
    ASSERT_TRUE(longMsg.process());
 
-   incFakeSystemTime(10);
+   sysTime += 10;
    ASSERT_TRUE(longMsg.process());
 
    // Invalid sequence number

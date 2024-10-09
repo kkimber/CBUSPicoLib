@@ -658,6 +658,7 @@ void CBUSLongMessageEx::processReceivedMessageFragment(const CANFrame &frame)
       // consume up to 5 bytes of message data from this fragment
       for (int_fast8_t j = 0; j < 5; j++)
       {
+         /// @todo - potential overflow of buffer here - apply fix
          _receive_context[i]->buffer[_receive_context[i]->receive_buffer_index] = frame.data[j + 3];
          ++_receive_context[i]->receive_buffer_index;
          ++_receive_context[i]->incoming_bytes_received;

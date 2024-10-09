@@ -40,7 +40,8 @@
 #include "CBUSSwitch.h"
 #include "SystemTick.h"
 
-#include <pico/stdlib.h>
+#include <hardware/gpio.h>
+#include <pico/time.h>
 
 /// Debounce delay of 20ms for all switches
 constexpr uint32_t DEFAULT_DEBOUNCE_MS {20UL};

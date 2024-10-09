@@ -14,9 +14,6 @@ static const uintptr_t XIP_BASE = reinterpret_cast<uintptr_t>(&dummyFlash[0]);
 
 static constexpr const auto PICO_FLASH_SIZE_BYTES {FLASH_SECTOR_SIZE};
 
-extern "C"
-{
 void flash_range_erase (uint32_t flash_offs, size_t count);
 
 void flash_range_program (uint32_t flash_offs, const uint8_t *data, size_t count);
-}

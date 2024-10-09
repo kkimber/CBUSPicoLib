@@ -38,15 +38,30 @@
 */
 
 #include "CBUSSwitch.h"
-#include "SystemTickFake.h"
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 
+#include "mocklib.h"
+
 #include <pico/stdlib.h>
+
+using testing::_;
+using testing::Return;
+
+// Lets us pin 1 as the LED pin
+static constexpr const auto pinSwitch {1};
 
 TEST(CBUSSwitch, initActiveLow)
 {
+   MockPicoSdk mockPicoSdk;
+   mockPicoSdkApi.mockPicoSdk = &mockPicoSdk;
+
+   EXPECT_CALL(mockPicoSdk, gpio_init(pinSwitch));
+   EXPECT_CALL(mockPicoSdk, gpio_set_dir(pinSwitch, GPIO_IN));
+   EXPECT_CALL(mockPicoSdk, gpio_set_pulls(pinSwitch, true, false));
+   EXPECT_CALL(mockPicoSdk, gpio_get(pinSwitch)).Times(2).WillRepeatedly(Return(true));
+
    CBUSSwitch sw;
 
    // Run before init
@@ -56,7 +71,7 @@ TEST(CBUSSwitch, initActiveLow)
    ASSERT_TRUE(sw.getState());
 
    // Init pin as active low
-   sw.setPin(1, false);
+   sw.setPin(pinSwitch, false);
    sw.run();
    
    // Pin should read as high (pulled up)
@@ -65,10 +80,18 @@ TEST(CBUSSwitch, initActiveLow)
 
 TEST(CBUSSwitch, initActiveHigh)
 {
+   MockPicoSdk mockPicoSdk;
+   mockPicoSdkApi.mockPicoSdk = &mockPicoSdk;
+
+   EXPECT_CALL(mockPicoSdk, gpio_init(pinSwitch));
+   EXPECT_CALL(mockPicoSdk, gpio_set_dir(pinSwitch, GPIO_IN));
+   EXPECT_CALL(mockPicoSdk, gpio_set_pulls(pinSwitch, false, true));
+   EXPECT_CALL(mockPicoSdk, gpio_get(pinSwitch)).Times(2).WillRepeatedly(Return(false));
+
    CBUSSwitch sw;
 
    // Init pin as active high
-   sw.setPin(1, true);
+   sw.setPin(pinSwitch, true);
    sw.run();
    
    // Pin should read as low (pulled down)
@@ -80,17 +103,43 @@ TEST(CBUSSwitch, readState)
    static constexpr const auto debounceDuration {20};
    static constexpr const auto heldDuration {100};
 
+   uint64_t sysTime = 0ULL;
+   bool pinState = true;
+
+   MockPicoSdk mockPicoSdk;
+   mockPicoSdkApi.mockPicoSdk = &mockPicoSdk;
+
+   EXPECT_CALL(mockPicoSdk, gpio_init(pinSwitch));
+   EXPECT_CALL(mockPicoSdk, gpio_set_dir(pinSwitch, GPIO_IN));
+   EXPECT_CALL(mockPicoSdk, gpio_set_pulls(pinSwitch, true, false));
+
+   // Manage pin state via lambda
+   EXPECT_CALL(mockPicoSdk, gpio_get(pinSwitch))
+       .WillRepeatedly(testing::Invoke(
+        [&pinState]() -> bool {
+            return pinState;
+        }
+   ));
+
+   // Manage system time via lambda
+   EXPECT_CALL(mockPicoSdk, get_absolute_time)
+       .WillRepeatedly(testing::Invoke(
+        [&sysTime]() -> uint64_t {
+            return sysTime * 1000; // time specified in milliseconds
+        }
+   ));
+
    CBUSSwitch sw;
 
    // Init active LOW switch
-   sw.setPin(1, false);
+   sw.setPin(pinSwitch, false);
    sw.setDebounceDuration(debounceDuration);
    sw.run();
 
    ASSERT_FALSE(sw.isPressed());
 
-   // Set pin as pushed
-   setFakePinState(false);
+   // Push pin
+   pinState = false;
    sw.run();
 
    // Should still indicate not pressed 
@@ -99,14 +148,13 @@ TEST(CBUSSwitch, readState)
    ASSERT_FALSE(sw.stateChanged());
 
    // half debounce period, should still be false/off
-   setFakeSystemTime(0);
-   incFakeSystemTime(debounceDuration / 2);
+   sysTime += (debounceDuration / 2);
    sw.run();
    ASSERT_TRUE(sw.getState());
    ASSERT_FALSE(sw.isPressed());
 
    // full debounce period, should indicate true/pressed
-   incFakeSystemTime(debounceDuration / 2);
+   sysTime += (debounceDuration / 2);
    sw.run();
    ASSERT_FALSE(sw.getState());
    ASSERT_TRUE(sw.isPressed());
@@ -116,24 +164,24 @@ TEST(CBUSSwitch, readState)
    ASSERT_EQ(sw.getCurrentStateDuration(), 0);
 
    // continue held pressed
-   incFakeSystemTime(heldDuration);
+   sysTime += (heldDuration);
    sw.run();
 
    ASSERT_EQ(sw.getCurrentStateDuration(), heldDuration);
 
    // release the button
-   setFakePinState(true);
+   pinState = true;
    sw.run();
 
    // advance time for off debounce
-   incFakeSystemTime(debounceDuration);
+   sysTime += (debounceDuration);
    sw.run();
 
    // check release
    ASSERT_FALSE(sw.isPressed());
 
    // advance time 
-   incFakeSystemTime(heldDuration);
+   sysTime += (heldDuration);
    sw.run();
 
    // check held duration of previous press
@@ -143,12 +191,12 @@ TEST(CBUSSwitch, readState)
    ASSERT_EQ(sw.getLastStateChangeTime(), heldDuration + (2 * debounceDuration));
 
    // press the button again  disable debounce
-   setFakePinState(false);
+   pinState = false;
    sw.setDebounceDuration(0);
    sw.run();
 
    // advance time
-   incFakeSystemTime(heldDuration);
+   sysTime += (heldDuration);
    sw.run();
 
    // check held duration
@@ -158,7 +206,7 @@ TEST(CBUSSwitch, readState)
    sw.resetCurrentDuration();
 
    // continue to hold button
-   incFakeSystemTime(heldDuration * 2);
+   sysTime += (heldDuration * 2);
    sw.run();
 
    // check held duration

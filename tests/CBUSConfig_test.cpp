@@ -38,13 +38,13 @@
 */
 
 #include "CBUSConfig.h"
-#include "SystemTickFake.h"
-#include "flash_mock.h"
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 
 #include <pico/stdlib.h>
+
+#include "mocklib.h"
 
 #include <CBUSLED.h>
 #include <CBUSSwitch.h>
@@ -60,11 +60,11 @@ TEST(CBUSConfig, basic)
    static constexpr const auto minCanID {1};
    static constexpr const auto maxCanID {99};
 
-   std::unique_ptr<flashMock> myFlashMock (new flashMock);
-   flashMockObj = myFlashMock.get();
+   MockPicoSdk mockPicoSdk;
+   mockPicoSdkApi.mockPicoSdk = &mockPicoSdk;
 
-   EXPECT_CALL(*myFlashMock.get(), flash_range_program(_,_,_)).Times(AnyNumber());
-   EXPECT_CALL(*myFlashMock.get(), flash_range_erase(0, FLASH_SECTOR_SIZE)).Times(AnyNumber());
+   EXPECT_CALL(mockPicoSdk, flash_range_program(_,_,_)).Times(AnyNumber());
+   EXPECT_CALL(mockPicoSdk, flash_range_erase(0, FLASH_SECTOR_SIZE)).Times(AnyNumber());
 
    dummyFlashInit();
 
@@ -100,17 +100,15 @@ TEST(CBUSConfig, basic)
    // Test CAN ID limits
    ASSERT_FALSE(config.setCANID(minCanID - 1));
    ASSERT_FALSE(config.setCANID(maxCanID + 1));
-
 }
 
 TEST(CBUSConfig, events)
 {
-   // Flash mock
-   std::unique_ptr<flashMock> myFlashMock (new flashMock);
-   flashMockObj = myFlashMock.get();
+   MockPicoSdk mockPicoSdk;
+   mockPicoSdkApi.mockPicoSdk = &mockPicoSdk;
 
-   EXPECT_CALL(*myFlashMock.get(), flash_range_program(_,_,_)).Times(AnyNumber());
-   EXPECT_CALL(*myFlashMock.get(), flash_range_erase(0, FLASH_SECTOR_SIZE)).Times(AnyNumber());
+   EXPECT_CALL(mockPicoSdk, flash_range_program(_,_,_)).Times(AnyNumber());
+   EXPECT_CALL(mockPicoSdk, flash_range_erase(0, FLASH_SECTOR_SIZE)).Times(AnyNumber());
 
    dummyFlashInit();
 
@@ -184,12 +182,11 @@ TEST(CBUSConfig, events)
 
 TEST(CBUSConfig, nodeVars)
 {
-   // Flash mock
-   std::unique_ptr<flashMock> myFlashMock (new flashMock);
-   flashMockObj = myFlashMock.get();
+   MockPicoSdk mockPicoSdk;
+   mockPicoSdkApi.mockPicoSdk = &mockPicoSdk;
 
-   EXPECT_CALL(*myFlashMock.get(), flash_range_program(_,_,_)).Times(AnyNumber());
-   EXPECT_CALL(*myFlashMock.get(), flash_range_erase(0, FLASH_SECTOR_SIZE)).Times(AnyNumber());
+   EXPECT_CALL(mockPicoSdk, flash_range_program(_,_,_)).Times(AnyNumber());
+   EXPECT_CALL(mockPicoSdk, flash_range_erase(0, FLASH_SECTOR_SIZE)).Times(AnyNumber());
 
    dummyFlashInit();
 
@@ -210,17 +207,15 @@ TEST(CBUSConfig, nodeVars)
    {
       ASSERT_EQ(config.readNV(nv), nv + 1);
    }
-
 }
 
 TEST(CBUSConfig, resetModule)
 {
-   // Flash mock
-   std::unique_ptr<flashMock> myFlashMock (new flashMock);
-   flashMockObj = myFlashMock.get();
+   MockPicoSdk mockPicoSdk;
+   mockPicoSdkApi.mockPicoSdk = &mockPicoSdk;
 
-   EXPECT_CALL(*myFlashMock.get(), flash_range_program(_,_,_)).Times(AnyNumber());
-   EXPECT_CALL(*myFlashMock.get(), flash_range_erase(0, FLASH_SECTOR_SIZE)).Times(AnyNumber());
+   EXPECT_CALL(mockPicoSdk, flash_range_program(_,_,_)).Times(AnyNumber());
+   EXPECT_CALL(mockPicoSdk, flash_range_erase(0, FLASH_SECTOR_SIZE)).Times(AnyNumber());
 
    dummyFlashInit();
 

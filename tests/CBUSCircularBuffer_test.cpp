@@ -38,12 +38,16 @@
 */
 
 #include "CBUSCircularBuffer.h"
-#include "SystemTickFake.h"
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 
 #include <pico/stdlib.h>
+
+#include "mocklib.h"
+
+using testing::_;
+using testing::Return;
 
 // Uninitialized usage test
 TEST(CBUSCircularBuffer, noInit)
@@ -79,7 +83,10 @@ TEST(CBUSCircularBuffer, basicUsage)
    static constexpr const auto frameID {1};
    static constexpr const auto sysTime {1234};
 
-   setFakeSystemTime(sysTime);
+   MockPicoSdk mockPicoSdk;
+   mockPicoSdkApi.mockPicoSdk = &mockPicoSdk;
+
+   EXPECT_CALL(mockPicoSdk, get_absolute_time()).WillRepeatedly(Return(sysTime));
 
    CBUSCircularBuffer buffer(numItems);
    CANFrame frame;
@@ -127,6 +134,11 @@ TEST(CBUSCircularBuffer, advancedUsage)
 {
    static constexpr const auto numItems {10};
 
+   MockPicoSdk mockPicoSdk;
+   mockPicoSdkApi.mockPicoSdk = &mockPicoSdk;
+
+   EXPECT_CALL(mockPicoSdk, get_absolute_time()).WillRepeatedly(Return(0));
+
    CBUSCircularBuffer buffer(numItems);
    CANFrame frame;
 
@@ -163,6 +175,11 @@ TEST(CBUSCircularBuffer, overflow)
    static constexpr const auto frameID1 {1};
    static constexpr const auto frameID2 {2};
    static constexpr const auto frameID3 {3};
+
+   MockPicoSdk mockPicoSdk;
+   mockPicoSdkApi.mockPicoSdk = &mockPicoSdk;
+
+   EXPECT_CALL(mockPicoSdk, get_absolute_time()).WillRepeatedly(Return(0));
 
    CBUSCircularBuffer buffer(numItems);
    CANFrame frame;

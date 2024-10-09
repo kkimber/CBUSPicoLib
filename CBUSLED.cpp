@@ -40,6 +40,7 @@
 #include "CBUSLED.h"
 #include "SystemTick.h"
 
+#include <hardware/gpio.h>
 #include <pico/stdlib.h>
 
 constexpr uint16_t DEFAULT_BLINK_RATE = 500;         ///< flash at 1Hz, 500mS on, 500mS off

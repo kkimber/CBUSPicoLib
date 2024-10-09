@@ -38,28 +38,55 @@
 */
 
 #include "CBUSLED.h"
-#include "SystemTickFake.h"
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 
 #include <pico/stdlib.h>
 
+#include "mocklib.h"
+
+using testing::_;
+using testing::AnyNumber;
+using testing::Return;
+
+// Lets us pin 1 as the LED pin
+static constexpr const auto pinLED {1};
+
 TEST(CBUSLED, init)
 {
+   MockPicoSdk mockPicoSdk;
+   mockPicoSdkApi.mockPicoSdk = &mockPicoSdk;
+
+   EXPECT_CALL(mockPicoSdk, gpio_init(pinLED));
+   EXPECT_CALL(mockPicoSdk, gpio_set_dir(pinLED, GPIO_OUT));
+   EXPECT_CALL(mockPicoSdk, gpio_put(pinLED, false));
+   EXPECT_CALL(mockPicoSdk, get_absolute_time())
+      .Times(AnyNumber()).WillRepeatedly(Return(0));
+
    CBUSLED led;
 
    // Check initialization - LED should be OFF
-   led.setPin(1);
+   led.setPin(pinLED);
    ASSERT_FALSE(led.getState());
 }
 
 TEST(CBUSLED, turnOnOff)
 {
+   MockPicoSdk mockPicoSdk;
+   mockPicoSdkApi.mockPicoSdk = &mockPicoSdk;
+
+   EXPECT_CALL(mockPicoSdk, gpio_init(pinLED));
+   EXPECT_CALL(mockPicoSdk, gpio_set_dir(pinLED, GPIO_OUT));
+   EXPECT_CALL(mockPicoSdk, gpio_put(pinLED, false)).Times(2);
+   EXPECT_CALL(mockPicoSdk, gpio_put(pinLED, true)).Times(1);
+   EXPECT_CALL(mockPicoSdk, get_absolute_time())
+      .Times(AnyNumber()).WillRepeatedly(Return(0));
+
    CBUSLED led;
 
-   led.setPin(1);
-  
+   // Set OFF initially
+   led.setPin(pinLED);
    ASSERT_FALSE(led.getState());
 
    // Turn ON
@@ -75,10 +102,20 @@ TEST(CBUSLED, turnOnOff)
 
 TEST(CBUSLED, toggle)
 {
+   MockPicoSdk mockPicoSdk;
+   mockPicoSdkApi.mockPicoSdk = &mockPicoSdk;
+
+   EXPECT_CALL(mockPicoSdk, gpio_init(pinLED));
+   EXPECT_CALL(mockPicoSdk, gpio_set_dir(pinLED, GPIO_OUT));
+   EXPECT_CALL(mockPicoSdk, gpio_put(pinLED, false)).Times(2);
+   EXPECT_CALL(mockPicoSdk, gpio_put(pinLED, true)).Times(1);
+   EXPECT_CALL(mockPicoSdk, get_absolute_time())
+      .Times(AnyNumber()).WillRepeatedly(Return(0));
+
    CBUSLED led;
 
-   led.setPin(1);
-  
+   // Set OFF initially
+   led.setPin(pinLED);
    ASSERT_FALSE(led.getState());
 
    // Toggle ON
@@ -97,8 +134,25 @@ TEST(CBUSLED, pulse)
    static constexpr const auto SHORT_FLICKER_TIME = 100;
    static constexpr const auto LONG_FLICKER_TIME = 500;
 
+   uint64_t sysTime = 0ULL;
+
+   MockPicoSdk mockPicoSdk;
+   mockPicoSdkApi.mockPicoSdk = &mockPicoSdk;
+
+   EXPECT_CALL(mockPicoSdk, gpio_init(pinLED));
+   EXPECT_CALL(mockPicoSdk, gpio_set_dir(pinLED, GPIO_OUT));
+   EXPECT_CALL(mockPicoSdk, gpio_put(pinLED, _)).Times(AnyNumber());
+
+   // Manage system time via lambda
+   EXPECT_CALL(mockPicoSdk, get_absolute_time)
+       .WillRepeatedly(testing::Invoke(
+        [&sysTime]() -> uint64_t {
+            return sysTime * 1000; // time specified in milliseconds
+        }
+    ));
+
    CBUSLED led;
-   led.setPin(1);
+   led.setPin(pinLED);
    led.setShortPulseDuration(SHORT_FLICKER_TIME);
    led.setLongPulseDuration(LONG_FLICKER_TIME);
 
@@ -110,12 +164,12 @@ TEST(CBUSLED, pulse)
    ASSERT_TRUE(led.getState());
 
    // Half pulse duration expired - should still be OK
-   incFakeSystemTime(LONG_FLICKER_TIME / 2);
+   sysTime += (LONG_FLICKER_TIME / 2);
    led.run();
    ASSERT_TRUE(led.getState());
 
    // Full pulse duration expired - should be OFF
-   incFakeSystemTime(LONG_FLICKER_TIME / 2);
+   sysTime += (LONG_FLICKER_TIME / 2);
    led.run();
    ASSERT_FALSE(led.getState());
 
@@ -125,25 +179,45 @@ TEST(CBUSLED, pulse)
    ASSERT_TRUE(led.getState());
 
    // Half pulse duration expired - should still be OK
-   incFakeSystemTime(SHORT_FLICKER_TIME / 2);
+   sysTime += (SHORT_FLICKER_TIME / 2);
    led.run();
    ASSERT_TRUE(led.getState());
 
    // Full pulse duration expired - should be OFF
-   incFakeSystemTime(SHORT_FLICKER_TIME / 2);
+   sysTime += (SHORT_FLICKER_TIME / 2);
    led.run();
    ASSERT_FALSE(led.getState());
 }
 
 TEST(CBUSLED, blink)
 {
+   uint64_t sysTime = 0ULL;
+
+   MockPicoSdk mockPicoSdk;
+   mockPicoSdkApi.mockPicoSdk = &mockPicoSdk;
+
+   EXPECT_CALL(mockPicoSdk, gpio_init(pinLED));
+   EXPECT_CALL(mockPicoSdk, gpio_set_dir(pinLED, GPIO_OUT));
+   EXPECT_CALL(mockPicoSdk, gpio_put(pinLED, _)).Times(AnyNumber());
+
+   // Manage system time via lambda
+   EXPECT_CALL(mockPicoSdk, get_absolute_time)
+       .WillRepeatedly(testing::Invoke(
+        [&sysTime]() -> uint64_t {
+            return sysTime * 1000; // time specified in milliseconds
+        }
+    ));
+
    static constexpr const auto BLINK_RATE = 500;
 
    CBUSLED led;
-   led.setPin(1);
+   led.setPin(pinLED);
    led.setBlinkRate(BLINK_RATE);
+   led.run();
 
    ASSERT_FALSE(led.getState());
+
+   sysTime += BLINK_RATE;
 
    led.blink();
    led.run();
@@ -152,24 +226,24 @@ TEST(CBUSLED, blink)
    ASSERT_TRUE(led.getState());
 
    // at half blink rate - should still be ON
-   incFakeSystemTime(BLINK_RATE / 2);
+   sysTime += (BLINK_RATE / 2);
    led.run();
    ASSERT_TRUE(led.getState());
 
    // at complete blink rate - should be OFF
-   incFakeSystemTime(BLINK_RATE / 2);
+   sysTime += (BLINK_RATE / 2);
    led.run();
    ASSERT_FALSE(led.getState());
 
    // Check blinking continues
    for (auto i=0; i < 10; i++)
    {
-      incFakeSystemTime(BLINK_RATE);
+      sysTime += (BLINK_RATE);
       led.run();
 
       ASSERT_TRUE(led.getState());
 
-      incFakeSystemTime(BLINK_RATE);
+      sysTime += (BLINK_RATE);
       led.run();
 
       ASSERT_FALSE(led.getState());
