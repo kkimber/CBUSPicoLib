@@ -28,6 +28,14 @@ SET(CMAKE_C_FLAGS "-g -O0 --coverage -fprofile-arcs -ftest-coverage -fprofile-ab
 add_subdirectory("${CMAKE_BINARY_DIR}/googletest-src"
                  "${CMAKE_BINARY_DIR}/googletest-build")
 
+# The gtest/gtest_main targets carry header search path
+# dependencies automatically when using CMake 2.8.11 or
+# later. Otherwise we have to add them here ourselves.
+#if (CMAKE_VERSION VERSION_LESS 2.8.11)
+include_directories("${gtest_SOURCE_DIR}/include")
+include_directories("${gmock_SOURCE_DIR}/include")
+#endif()
+
 # Now simply link your own targets against gtest, gmock,
 # etc. as appropriate
 
