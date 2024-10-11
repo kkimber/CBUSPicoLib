@@ -38,6 +38,7 @@
 */
 
 #include "CBUSLED.h"
+#include "SystemTick.h"
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
@@ -49,6 +50,33 @@
 using testing::_;
 using testing::AnyNumber;
 using testing::Return;
+
+TEST(CBUSLED, systemTime)
+{
+   uint64_t sysTime = 0ULL;
+
+   MockPicoSdk mockPicoSdk;
+   mockPicoSdkApi.mockPicoSdk = &mockPicoSdk;
+
+   // Manage system time via lambda
+   EXPECT_CALL(mockPicoSdk, get_absolute_time)
+       .WillRepeatedly(testing::Invoke(
+        [&sysTime]() -> uint64_t {
+            return sysTime * 1000; // time specified in milliseconds
+        }
+    ));
+
+   sysTime = 1234ULL;
+
+   EXPECT_EQ(SystemTick::GetMilli(), sysTime);
+   EXPECT_EQ(SystemTick::GetMicros(), sysTime * 1000);
+
+   // Test clamp to 32-bits
+   sysTime = 0x1FFFFFFFF;
+   EXPECT_EQ(SystemTick::GetMilli(), (uint32_t)sysTime);
+
+
+}
 
 // Lets us pin 1 as the LED pin
 static constexpr const auto pinLED {1};

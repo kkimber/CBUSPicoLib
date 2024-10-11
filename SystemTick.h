@@ -43,10 +43,9 @@
 /// Class to encapsulate time and Sys Tick handling
 //
 
-class SystemTick
+struct SystemTick
 {
-public:
-   SystemTick();
+   SystemTick() = delete;
    static uint32_t GetMilli(void);
    static uint32_t GetMicros(void);
 };

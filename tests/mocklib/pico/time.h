@@ -21,9 +21,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "stdlib.h"
 
-#define to_us_since_boot(x) x
-
 typedef uint64_t absolute_time_t;
+
+static inline uint64_t to_us_since_boot(absolute_time_t t) {
+    return t;
+}
 
 static inline uint32_t us_to_ms(uint64_t us) {
     if (us >> 32u) {

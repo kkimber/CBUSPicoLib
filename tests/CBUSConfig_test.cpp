@@ -50,7 +50,12 @@
 #include <CBUSSwitch.h>
 
 using testing::_;
+using testing::Return;
+using testing::ReturnArg;
+using testing::Invoke;
 using testing::AnyNumber;
+
+/// Flash Backend
 
 TEST(CBUSConfig, basic)
 {
@@ -100,6 +105,9 @@ TEST(CBUSConfig, basic)
    // Test CAN ID limits
    ASSERT_FALSE(config.setCANID(minCanID - 1));
    ASSERT_FALSE(config.setCANID(maxCanID + 1));
+
+   // Free memory
+   ASSERT_GT(config.freeSRAM(), 1);
 }
 
 TEST(CBUSConfig, events)
@@ -176,8 +184,53 @@ TEST(CBUSConfig, events)
       ASSERT_EQ(eventNo, ev);
    }
 
+   // Clear the events
+   config.clearEventsEEPROM();
+
+   // Find events via hash - none should be found
+   for (int_fast8_t ev = 0; ev < config.EE_MAX_EVENTS; ev++)
+   {
+      uint8_t eventNo = config.findExistingEvent(ev + 10, ev + 1);
+
+      ASSERT_EQ(eventNo, config.EE_MAX_EVENTS);
+   }
+
    // Check down the hash table
    config.clearEvHashTable();
+
+   // Create new event 
+   uint8_t eventNo = config.findEventSpace();
+   ASSERT_EQ(eventNo, 0);
+   evInfo.eventNumber = 1;
+   evInfo.nodeNumber = 1;
+
+   config.writeEvent(eventNo, evInfo, false); // no flush
+   config.writeEventEV(eventNo, 1, 1);
+   config.updateEvHashEntry(eventNo);
+
+   ASSERT_EQ(config.numEvents(), 1);
+
+   // Add a duplicate event - force hash clash
+   eventNo = config.findEventSpace();
+   ASSERT_EQ(eventNo, 1);
+   config.writeEvent(eventNo, evInfo, true); // flush
+   config.updateEvHashEntry(eventNo);
+
+   // get hash of event #0 and #1
+   uint8_t hashEv0 = config.getEvTableEntry(0);
+   uint8_t hashEv1 = config.getEvTableEntry(0);
+   ASSERT_EQ(hashEv0, hashEv1);
+
+   // recreate hash table
+   config.makeEvHashTable();
+
+   // find event by hash, should return first in table
+   ASSERT_EQ(config.findExistingEvent(1,1), 0);
+
+   // attempt to get hash of invalid event
+   ASSERT_EQ(config.getEvTableEntry(config.EE_MAX_EVENTS + 1), 0);
+
+
 }
 
 TEST(CBUSConfig, nodeVars)
@@ -191,6 +244,13 @@ TEST(CBUSConfig, nodeVars)
    dummyFlashInit();
 
    CBUSConfig config;
+   config.EE_NVS_START = 10;    // Offset start of Node Variables
+   config.EE_NUM_NVS = 10;      // Number of Node Variables
+   config.EE_EVENTS_START = 20; // Offset start of Events
+   config.EE_MAX_EVENTS = 10;   // Maximum number of events
+   config.EE_NUM_EVS = 1;       // Number of Event Variables per event (the InEventID)
+   config.EE_BYTES_PER_EVENT = (config.EE_NUM_EVS + 4);
+  
    config.setEEPROMtype(EEPROM_TYPE::EEPROM_USES_FLASH);
 
    // Write all NV's
@@ -211,6 +271,98 @@ TEST(CBUSConfig, nodeVars)
 
 TEST(CBUSConfig, resetModule)
 {
+   uint64_t sysTime = 0ULL;
+   bool pinState = true; // Active LOW, initially not pressed
+
+   static constexpr const auto pinSwitch {1};
+
+   MockPicoSdk mockPicoSdk;
+   mockPicoSdkApi.mockPicoSdk = &mockPicoSdk;
+
+   EXPECT_CALL(mockPicoSdk, flash_range_program(_,_,_)).Times(AnyNumber());
+   EXPECT_CALL(mockPicoSdk, flash_range_erase(0, FLASH_SECTOR_SIZE)).Times(AnyNumber());
+
+   // Manage system time via lambda
+   EXPECT_CALL(mockPicoSdk, get_absolute_time)
+       .WillRepeatedly(testing::Invoke(
+        [&sysTime]() -> uint64_t {
+            return sysTime += 1000; // time specified in milliseconds
+        }
+    ));
+
+   EXPECT_CALL(mockPicoSdk, gpio_get(pinSwitch))
+       .WillRepeatedly(testing::Invoke(
+        [&pinState]() -> bool {
+            return pinState;
+        }
+   ));
+
+   dummyFlashInit();
+
+   CBUSConfig config;
+   config.EE_NVS_START = 10;    // Offset start of Node Variables
+   config.EE_NUM_NVS = 10;      // Number of Node Variables
+   config.EE_EVENTS_START = 20; // Offset start of Events
+   config.EE_MAX_EVENTS = 10;   // Maximum number of events
+   config.EE_NUM_EVS = 1;       // Number of Event Variables per event (the InEventID)
+   config.EE_BYTES_PER_EVENT = (config.EE_NUM_EVS + 4);
+
+   config.setEEPROMtype(EEPROM_TYPE::EEPROM_USES_FLASH);
+
+   // Reset no UI
+   config.resetModule();
+
+   // Reset with UI
+   CBUSLED green;
+   CBUSLED yellow;
+   CBUSSwitch sw;
+   sw.setPin(pinSwitch, false);
+
+   // Reset - Button not pressed
+   config.resetModule(green, yellow, sw);
+
+   // Press the button
+   pinState = false;
+
+   // Reset - Button pressed
+   config.resetModule(green, yellow, sw);
+
+   // Reset flag should be set after reset module
+   ASSERT_TRUE(config.isResetFlagSet());
+
+   // Test flag clear
+   config.clearResetFlag();
+   ASSERT_FALSE(config.isResetFlagSet());
+
+   // Test force set flag
+   config.setResetFlag();
+   ASSERT_TRUE(config.isResetFlagSet());
+}
+
+/// I2C Backend
+
+TEST(CBUSConfig, i2cBackend)
+{
+   MockPicoSdk mockPicoSdk;
+   mockPicoSdkApi.mockPicoSdk = &mockPicoSdk;
+
+   EXPECT_CALL(mockPicoSdk, i2c_init(_, 100*1000)); // Init I2C 100K
+   EXPECT_CALL(mockPicoSdk, gpio_set_function(_, GPIO_FUNC_I2C)).Times(2); // Set 2 pins
+   EXPECT_CALL(mockPicoSdk, i2c_write_blocking(_,_,_,_,_)) // Return success 
+     .WillRepeatedly(::testing::ReturnArg<3>());
+   EXPECT_CALL(mockPicoSdk, i2c_read_blocking(_,_,_,_,_)) // Return success
+     .WillRepeatedly(::testing::ReturnArg<3>());
+
+   CBUSConfig config;
+   config.setEEPROMtype(EEPROM_TYPE::EEPROM_EXTERNAL_I2C);
+   config.setExtEEPROMAddress(1);
+   config.begin();
+   config.resetModule();
+
+}
+
+TEST(CBUSConfig, flashAPI)
+{
    MockPicoSdk mockPicoSdk;
    mockPicoSdkApi.mockPicoSdk = &mockPicoSdk;
 
@@ -220,13 +372,85 @@ TEST(CBUSConfig, resetModule)
    dummyFlashInit();
 
    CBUSConfig config;
+   config.EE_NVS_START = 10;    // Offset start of Node Variables
+   config.EE_NUM_NVS = 10;      // Number of Node Variables
+   config.EE_EVENTS_START = 20; // Offset start of Events
+   config.EE_MAX_EVENTS = 10;   // Maximum number of events
+   config.EE_NUM_EVS = 1;       // Number of Event Variables per event (the InEventID)
+   config.EE_BYTES_PER_EVENT = (config.EE_NUM_EVS + 4);
+  
    config.setEEPROMtype(EEPROM_TYPE::EEPROM_USES_FLASH);
 
-   CBUSLED green;
-   CBUSLED yellow;
-   CBUSSwitch sw;
+   config.begin();
 
-   config.resetModule();
+   static constexpr const auto NUM_BYTES = 8;
+   uint8_t writeBytes[NUM_BYTES] = {1,2,3,4,5,6,7,8};
+   config.writeBytesEEPROM(0, writeBytes, NUM_BYTES);
+
+   uint8_t readBytes[NUM_BYTES] = {};
+   config.readBytesEEPROM(0, NUM_BYTES, readBytes);
+
+   ASSERT_EQ(memcmp(readBytes, writeBytes, NUM_BYTES), 0);
+
+   // Read beyond allocated flags
+   ASSERT_EQ(config.getChipEEPROMVal(FLASH_SECTOR_SIZE + 1), 0xFF);
+}
+
+// Manage simple I2C write/read
+uint8_t saveData = {};
+
+int writeI2C(i2c_inst_t*, uint8_t, const uint8_t* data, size_t len, bool)
+{
+   if (len == 2) saveData = data[1];
+   return len;
+}
+
+int readI2C(i2c_inst_t *, uint8_t, uint8_t * data, size_t len, bool, absolute_time_t)
+{
+   *data = saveData;
+   return len;
+}
+
+TEST(CBUSConfig, i2cAPI)
+{
+   MockPicoSdk mockPicoSdk;
+   mockPicoSdkApi.mockPicoSdk = &mockPicoSdk;
+   
+   EXPECT_CALL(mockPicoSdk, i2c_init(_, 100*1000)); // Init I2C 100K
+   EXPECT_CALL(mockPicoSdk, gpio_set_function(_, GPIO_FUNC_I2C)).Times(2); // Set 2 pins
+   EXPECT_CALL(mockPicoSdk, i2c_write_blocking(_,_,_,_,_)) 
+     .WillOnce(Return(0))                                 // Fail first call
+     .WillRepeatedly(Invoke(writeI2C));
+   EXPECT_CALL(mockPicoSdk, i2c_read_blocking(_,_,_,_,_))
+     .WillRepeatedly(ReturnArg<3>());
+   EXPECT_CALL(mockPicoSdk, i2c_read_blocking_until(_,_,_,_,_,_))
+     .WillRepeatedly(Invoke(readI2C));
+
+   CBUSConfig config;
+   config.EE_NVS_START = 10;    // Offset start of Node Variables
+   config.EE_NUM_NVS = 10;      // Number of Node Variables
+   config.EE_EVENTS_START = 20; // Offset start of Events
+   config.EE_MAX_EVENTS = 10;   // Maximum number of events
+   config.EE_NUM_EVS = 1;       // Number of Event Variables per event (the InEventID)
+   config.EE_BYTES_PER_EVENT = (config.EE_NUM_EVS + 4);
+
+   // Should fail to init I2C and revert to flash - as 1st i2c_write_blocking fails
+   ASSERT_FALSE(config.setEEPROMtype(EEPROM_TYPE::EEPROM_EXTERNAL_I2C));
+
+   // Should pass on second I2C init attempt
+   ASSERT_TRUE(config.setEEPROMtype(EEPROM_TYPE::EEPROM_EXTERNAL_I2C));
+
+   config.begin();
+
+   // Mock I2C responses will only work for single byte transfer!!
+   static constexpr const auto NUM_BYTES = 1;
+   uint8_t writeBytes[NUM_BYTES] = {0xAB};
+   config.writeBytesEEPROM(0, writeBytes, NUM_BYTES);
+
+   uint8_t readBytes[NUM_BYTES] = {};
+   config.readBytesEEPROM(0, NUM_BYTES, readBytes);
+
+   ASSERT_EQ(memcmp(readBytes, writeBytes, NUM_BYTES), 0);
 }
 
 int main(int argc, char **argv)

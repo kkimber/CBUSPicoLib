@@ -42,14 +42,6 @@
 #include <pico/time.h>
 
 ///
-/// Constructor
-///
-SystemTick::SystemTick()
-{
-
-}
-
-///
 /// Get milliseconds since boot counter value
 ///
 uint32_t SystemTick::GetMilli(void)
