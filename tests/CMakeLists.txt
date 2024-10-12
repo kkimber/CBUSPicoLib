@@ -62,6 +62,21 @@ target_link_libraries(CBUSConfigtest mocklib gtest gmock)
 # CTest
 add_test(CBUSConfig CBUSConfigtest)
 
+# CBUS Params Tests ====================
+add_executable(CBUSParamstest
+   ../SystemTick.cpp
+   ../CBUSLED.cpp
+   ../CBUSSwitch.cpp
+   ../CBUSConfig.cpp
+   ../CBUSParams.cpp
+   ./CBUSParams_test.cpp
+)
+target_include_directories(CBUSParamstest PUBLIC mocklib mocks)
+target_link_libraries(CBUSParamstest mocklib gtest gmock)
+
+# CTest
+add_test(CBUSParams CBUSParamstest)
+
 # CBUS Long Message Tests =============
 add_executable(CBUSLongMessagetest
    ../SystemTick.cpp

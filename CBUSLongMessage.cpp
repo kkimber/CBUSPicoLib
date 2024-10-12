@@ -204,10 +204,10 @@ void CBUSLongMessage::processReceivedMessageFragment(const CANFrame &frame)
                }
             }
          }
-         else
-         {
-            // Not handling message with non-zero flags
-         }
+         //else
+         //{
+         //   // Not handling message with non-zero flags
+         //}
       }
    }
    else
@@ -228,14 +228,14 @@ void CBUSLongMessage::processReceivedMessageFragment(const CANFrame &frame)
                   // if the user buffer is full, give the user what we have so far
                   if (_receive_buffer_index >= _receive_buffer_len)
                   {
-                     _messagehandler(_receive_buffer, _receive_buffer_index, _receive_stream_id, CBUS_LONG_MESSAGE_INCOMPLETE);
+                     _messagehandler(_receive_buffer, _receive_buffer_index, _receive_stream_id, CBUS_LONG_MESSAGE_TRUNCATED);
                      _receive_buffer_index = 0;
                      memset(_receive_buffer, 0, _receive_buffer_len);
                      break;
                   }
 
-                   _receive_buffer[_receive_buffer_index] = frame.data[j + 3]; // take the next uint8_t
-                  ++_receive_buffer_index;                                     // increment the buffer index
+                  _receive_buffer[_receive_buffer_index] = frame.data[j + 3]; // take the next uint8_t
+                  ++_receive_buffer_index;                                    // increment the buffer index
                   ++_incoming_bytes_received;
 
                   // if we have read the entire message
@@ -256,15 +256,15 @@ void CBUSLongMessage::processReceivedMessageFragment(const CANFrame &frame)
                _is_receiving = false;
             }
          }
-         else
-         { 
-            // probably another stream in progress - we'll ignore it as we don't support concurrent streams
-         }
+         //else
+         //{ 
+         //   // probably another stream in progress - we'll ignore it as we don't support concurrent streams
+         //}
       }
-      else
-      { 
-         // a different sender CANID - ignore the fragment
-      }
+      //else
+      //{ 
+      //   // a different sender CANID - ignore the fragment
+      //}
 
    } // it's a continuation fragment
 
@@ -409,6 +409,8 @@ bool CBUSLongMessageEx::allocateContexts(uint8_t num_receive_contexts, uint32_t 
       _send_context[i]->in_use = false;
    }
 
+   m_bContextInit = true;
+
    return true;
 }
 
@@ -424,7 +426,12 @@ bool CBUSLongMessageEx::sendLongMessage(const void *msg, const uint32_t msg_len,
    uint16_t msg_crc = 0;
    CANFrame frame;
 
-   // ensure we aren't already sending a message with this stream ID
+   if (!m_bContextInit)
+   {
+      return false;
+   }
+
+      // ensure we aren't already sending a message with this stream ID
    for (i = 0; i < _num_send_contexts; i++)
    {
       if (_send_context[i]->in_use && _send_context[i]->send_stream_id == stream_id)
@@ -442,7 +449,7 @@ bool CBUSLongMessageEx::sendLongMessage(const void *msg, const uint32_t msg_len,
       }
    }
 
-   if (i > _num_send_contexts)
+   if (i >= _num_send_contexts)
    {
       return false;
    }
@@ -489,6 +496,11 @@ bool CBUSLongMessageEx::process(void)
    CANFrame frame; // Initializes to zero
 
    static uint8_t context = 0; // we round-robin the context list when sending
+
+   if (!m_bContextInit)
+   {
+      return false;
+   }
 
    /// check receive timeout for each active context
 
@@ -562,6 +574,11 @@ uint8_t CBUSLongMessageEx::isSending(void)
 {
    uint8_t i, num_streams;
 
+   if (!m_bContextInit)
+   {
+      return false;
+   }
+
    for (i = 0, num_streams = 0; i < _num_send_contexts; i++)
    {
       if (_send_context[i]->in_use)
@@ -582,6 +599,11 @@ void CBUSLongMessageEx::processReceivedMessageFragment(const CANFrame &frame)
    uint8_t i;
    uint8_t status;
    uint16_t tmpcrc = 0;
+
+   if (!m_bContextInit)
+   {
+      return;
+   }
 
    if (frame.data[2] == 0)
    { // sequence zero = a header packet with start of new stream
@@ -658,7 +680,6 @@ void CBUSLongMessageEx::processReceivedMessageFragment(const CANFrame &frame)
       // consume up to 5 bytes of message data from this fragment
       for (int_fast8_t j = 0; j < 5; j++)
       {
-         /// @todo - potential overflow of buffer here - apply fix
          _receive_context[i]->buffer[_receive_context[i]->receive_buffer_index] = frame.data[j + 3];
          ++_receive_context[i]->receive_buffer_index;
          ++_receive_context[i]->incoming_bytes_received;

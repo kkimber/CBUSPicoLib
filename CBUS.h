@@ -363,6 +363,7 @@ private:
    uint8_t _num_receive_contexts = NUM_EX_CONTEXTS, _num_send_contexts = NUM_EX_CONTEXTS;
    receive_context_t **_receive_context = nullptr;
    send_context_t **_send_context = nullptr;
+   bool m_bContextInit = false;
 };
 
 //
