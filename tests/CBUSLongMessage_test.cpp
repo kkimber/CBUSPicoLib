@@ -41,7 +41,7 @@
 #include <cstdlib>
 
 // CBUS Mocks
-#include "mocks/CBUS_mock.h"
+#include "CBUS_mock.h"
 
 #include "CBUS.h"
 #include "CBUSLED.h"

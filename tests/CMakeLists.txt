@@ -82,7 +82,7 @@ add_executable(CBUSLongMessagetest
    ../SystemTick.cpp
    ../CBUSLongMessage.cpp
    ../CBUSConfig.cpp
-   ../CBUSCircularBuffer
+   ../CBUSCircularBuffer.cpp
    ../CBUS.cpp
    ../CBUSLED.cpp
    ../CBUSSwitch.cpp
@@ -93,3 +93,21 @@ target_link_libraries(CBUSLongMessagetest mocklib gtest gmock)
 
 # CTest
 add_test(CBUSLongMessage CBUSLongMessagetest)
+
+# CBUS Tests ====================
+add_executable(CBUStest
+   ../SystemTick.cpp
+   ../CBUSLongMessage.cpp
+   ../CBUSConfig.cpp
+   ../CBUSParams.cpp
+   ../CBUSCircularBuffer.cpp
+   ../CBUS.cpp
+   ../CBUSLED.cpp
+   ../CBUSSwitch.cpp
+   ./CBUS_test.cpp
+)
+target_include_directories(CBUStest PUBLIC mocklib mocks)
+target_link_libraries(CBUStest mocklib gtest gmock)
+
+# CTest
+add_test(CBUS CBUStest)

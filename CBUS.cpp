@@ -865,6 +865,11 @@ bool CBUSbase::parseFLiMCmd(CANFrame &msg)
 {
    bool cmdProcessed = false;
 
+   if (!m_pModuleParams)
+   {
+      return cmdProcessed;
+   }
+
    // extract the OPC
    uint8_t opc = msg.data[0];
 
