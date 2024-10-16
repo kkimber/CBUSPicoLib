@@ -216,7 +216,7 @@ public:
    void doSnn(void);
 
    void doNnclr(void);
-   void doEvlrn(const uint8_t evNum, const uint8_t evVal);
+   void doEvlrn(const uint8_t evNum, const uint8_t evVal, const uint8_t evIdx=0xFF);
    void doReval(const uint8_t enNum, const uint8_t evNum);
    void doEvuln(void);
    void doReqev(const uint8_t evNum);

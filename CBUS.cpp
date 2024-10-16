@@ -913,7 +913,7 @@ bool CBUSbase::parseFLiMCmd(CANFrame &msg)
 
       case OPC_EVLRNI:
          // Teach event whilst in learn mode with event index
-         doEvlrn(msg.data[6], msg.data[7]); // Current implementation does not use index to save learnt event
+         doEvlrn(msg.data[6], msg.data[7], msg.data[5]);
          break;
 
       case OPC_REQEV:
@@ -1162,7 +1162,7 @@ void CBUSbase::doNvrd(const uint8_t NVindex)
 void CBUSbase::doNvset(const uint8_t NVindex, const uint8_t NVvalue)
 {
    // received NVSET -- set NV by index
-   if ((NVindex == 0) > (m_moduleConfig.EE_NUM_NVS))
+   if ((NVindex == 0) || (NVindex > m_moduleConfig.EE_NUM_NVS))
    {
       sendCMDERR(CMDERR_INV_NV_IDX);
    }
@@ -1267,8 +1267,9 @@ void CBUSbase::doNnclr()
 ///
 /// @param evNum event variable number
 /// @param evVal event variable value
+/// @param evIdx event index [optional]
 ///
-void CBUSbase::doEvlrn(const uint8_t evNum, const uint8_t evVal)
+void CBUSbase::doEvlrn(const uint8_t evNum, const uint8_t evVal, const uint8_t evIdx)
 {
    // evNum starts at 1
    if (evNum == 0)
@@ -1279,8 +1280,17 @@ void CBUSbase::doEvlrn(const uint8_t evNum, const uint8_t evVal)
 
    ////// @todo APP callback
 
-   // search for this NN, EN as we may just be adding an EV to an existing learned event
-   uint8_t index = m_moduleConfig.findExistingEvent(m_nodeNumber, m_eventNumber);
+   // If the event index is provided, use that
+   uint8_t index;
+   if (evIdx < m_moduleConfig.EE_MAX_EVENTS)
+   {
+      index = evIdx;
+   }
+   else
+   {
+      // search for this NN, EN as we may just be adding an EV to an existing learned event
+      index = m_moduleConfig.findExistingEvent(m_nodeNumber, m_eventNumber);
+   }
 
    // not found - it's a new event
    if (index >= m_moduleConfig.EE_MAX_EVENTS)
@@ -1383,11 +1393,15 @@ void CBUSbase::doReqev(const uint8_t evNum)
       return;
    }
 
+   // search for this NN and EN pair
+   uint8_t index = m_moduleConfig.findExistingEvent(m_nodeNumber, m_eventNumber);
+
    // Checks valid event number
-   if (m_moduleConfig.getEvTableEntry(m_eventNumber) != 0)
+   if (index < m_moduleConfig.EE_MAX_EVENTS)
    {
-      // return request event variable
-      sendOpcMyNN(OPC_NEVAL, 3, m_eventNumber, evNum, m_moduleConfig.getEventEVval(m_eventNumber, evNum));
+      // return requested event variable
+      sendOpcMyNN(OPC_EVANS, 4, highByte( m_eventNumber), lowByte(m_eventNumber),
+         evNum, m_moduleConfig.getEventEVval(index, evNum));
    }
    else
    {
