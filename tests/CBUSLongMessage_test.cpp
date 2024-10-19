@@ -44,8 +44,6 @@
 #include "CBUS_mock.h"
 
 #include "CBUS.h"
-#include "CBUSLED.h"
-#include "CBUSSwitch.h"
 #include "CBUSConfig.h"
 
 #include <gtest/gtest.h>
@@ -56,7 +54,7 @@
 #include <pico/stdlib.h>
 
 using testing::_;
-using testing::AnyNumber;
+
 using testing::Return;
 
 // Receive callback mock

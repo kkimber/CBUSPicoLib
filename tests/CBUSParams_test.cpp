@@ -48,10 +48,6 @@
 
 #include "mocklib.h"
 
-using testing::_;
-using testing::AnyNumber;
-using testing::Return;
-
 TEST(CBUSParams, init)
 {
    uint64_t sysTime = 0ULL;

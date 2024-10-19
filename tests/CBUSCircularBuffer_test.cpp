@@ -46,7 +46,6 @@
 
 #include "mocklib.h"
 
-using testing::_;
 using testing::Return;
 
 // Uninitialized usage test

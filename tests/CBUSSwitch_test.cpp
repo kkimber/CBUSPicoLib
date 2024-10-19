@@ -46,7 +46,6 @@
 
 #include <pico/stdlib.h>
 
-using testing::_;
 using testing::Return;
 
 // Lets us pin 1 as the LED pin
