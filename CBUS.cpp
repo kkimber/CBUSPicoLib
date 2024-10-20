@@ -788,7 +788,7 @@ bool CBUSbase::parseCBUSMsg(CANFrame &msg)
 {
    // Check if this is an Event
    if (((msg.data[0] & EVENT_SET_MASK) == EVENT_SET_MASK) &&
-       ((~msg.data[0] & EVENT_CLR_MASK) == EVENT_CLR_MASK))
+      ((~msg.data[0] & EVENT_CLR_MASK) == EVENT_CLR_MASK))
    {
       // if this is an event, pass to module's event processing
       return parseCBUSEvent(msg);
