@@ -31,8 +31,8 @@ jobs:
       with:
          root: ${{github.workspace}}
          excludes: |
-            'build/*'
-            'tests/*'
+            '${{github.workspace}}/build/*'
+            '${{github.workspace}}/tests/*'
          html-out: coverage.html
          html-title: CBUSPicoLib Test Coverage Report
     - name: Create a temporary artifact folder
