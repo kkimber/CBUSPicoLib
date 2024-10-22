@@ -239,7 +239,6 @@ TEST(CBUS, basicSLiM)
    cbus.getCBUSYellowLED();
    cbus.getCBUSSwitch();
 
-
    //--------------------------------------------
    // RQNPN - read parameter NPARAMS
    canRxFrame = {.len=4, .data{OPC_RQNPN, 0x00, 0x00, PAR_NPARAMS}};
@@ -257,7 +256,10 @@ TEST(CBUS, basicSLiM)
 
    // Should return a single PARAN frame with value for NPARAMS
    ASSERT_TRUE(mockGetCanTx(canTxFrame));
+   ASSERT_EQ(canTxFrame.len,5);
    ASSERT_EQ(canTxFrame.data[0], OPC_PARAN);
+   ASSERT_EQ(canTxFrame.data[1], 0x00);
+   ASSERT_EQ(canTxFrame.data[2], 0x00);
    ASSERT_EQ(canTxFrame.data[3], PAR_NPARAMS);
    ASSERT_EQ(canTxFrame.data[4], params.getParams()->param[PAR_NPARAMS]);
 
@@ -268,7 +270,10 @@ TEST(CBUS, basicSLiM)
 
    // Should return PARAN value for FLAGS - we're in SLiM and not learn mode
    ASSERT_TRUE(mockGetCanTx(canTxFrame));
+   ASSERT_EQ(canTxFrame.len,5);
    ASSERT_EQ(canTxFrame.data[0], OPC_PARAN);
+   ASSERT_EQ(canTxFrame.data[1], 0x00);
+   ASSERT_EQ(canTxFrame.data[2], 0x00);
    ASSERT_EQ(canTxFrame.data[3], PAR_FLAGS);
    ASSERT_EQ(canTxFrame.data[4], params.getParams()->param[PAR_FLAGS]);
 
@@ -279,13 +284,32 @@ TEST(CBUS, basicSLiM)
 
    // Should return invalid parameter error
    ASSERT_TRUE(mockGetCanTx(canTxFrame));
+   ASSERT_EQ(canTxFrame.len, 4);
    ASSERT_EQ(canTxFrame.data[0], OPC_CMDERR);
+   ASSERT_EQ(canTxFrame.data[1], 0x00);
+   ASSERT_EQ(canTxFrame.data[2], 0x00);
    ASSERT_EQ(canTxFrame.data[3], CMDERR_INV_PARAM_IDX);
 
    //--------------------------------------------
    // NVSET / NVGET - set / get Node Variables
 
-   EXPECT_CALL(cbus, validateNV).WillRepeatedly(Return(true));
+   // Accept all NV changes
+   EXPECT_CALL(cbus, validateNV)
+      .WillOnce(Return(false))
+      .WillRepeatedly(Return(true));
+
+   // Set NV - will be rejected via validateNV returning false
+   canRxFrame = {.len=5, .data{OPC_NVSET, 0x00, 0x00, 1, 1}};
+   mockAddRxFrame(canRxFrame);
+   cbus.process();
+
+   // Expect CMDERR_INV_NV_VALUE
+   ASSERT_TRUE(mockGetCanTx(canTxFrame));
+   ASSERT_EQ(canTxFrame.len, 4);
+   ASSERT_EQ(canTxFrame.data[0], OPC_CMDERR);
+   ASSERT_EQ(canTxFrame.data[1], 0x00);
+   ASSERT_EQ(canTxFrame.data[2], 0x00);
+   ASSERT_EQ(canTxFrame.data[3], CMDERR_INV_NV_VALUE);
 
    {
       InSequence s; // MUST BE EE_NUM_VARS calls
@@ -310,7 +334,10 @@ TEST(CBUS, basicSLiM)
 
       // Should return write ACK
       ASSERT_TRUE(mockGetCanTx(canTxFrame));
+      ASSERT_EQ(canTxFrame.len, 3);
       ASSERT_EQ(canTxFrame.data[0], OPC_WRACK);
+      ASSERT_EQ(canTxFrame.data[1], 0x00);
+      ASSERT_EQ(canTxFrame.data[2], 0x00);
 
       // Read NV
       canRxFrame = {.len=4, .data{OPC_NVRD, 0x00, 0x00, nv}};
@@ -319,7 +346,10 @@ TEST(CBUS, basicSLiM)
 
       // Should return value written
       ASSERT_TRUE(mockGetCanTx(canTxFrame));
+      ASSERT_EQ(canTxFrame.len, 5);
       ASSERT_EQ(canTxFrame.data[0], OPC_NVANS);
+      ASSERT_EQ(canTxFrame.data[1], 0x00);
+      ASSERT_EQ(canTxFrame.data[2], 0x00);
       ASSERT_EQ(canTxFrame.data[3], nv);
       ASSERT_EQ(canTxFrame.data[4], nv);
    }
@@ -331,7 +361,10 @@ TEST(CBUS, basicSLiM)
 
    // Should return command error invalid NV index
    ASSERT_TRUE(mockGetCanTx(canTxFrame));
+   ASSERT_EQ(canTxFrame.len, 4);
    ASSERT_EQ(canTxFrame.data[0], OPC_CMDERR);
+   ASSERT_EQ(canTxFrame.data[1], 0x00);
+   ASSERT_EQ(canTxFrame.data[2], 0x00);
    ASSERT_EQ(canTxFrame.data[3], CMDERR_INV_NV_IDX);
 
    // Attempt to write invalid NV
@@ -341,7 +374,10 @@ TEST(CBUS, basicSLiM)
 
    // Should return command error invalid NV index
    ASSERT_TRUE(mockGetCanTx(canTxFrame));
+   ASSERT_EQ(canTxFrame.len, 4);
    ASSERT_EQ(canTxFrame.data[0], OPC_CMDERR);
+   ASSERT_EQ(canTxFrame.data[1], 0x00);
+   ASSERT_EQ(canTxFrame.data[2], 0x00);
    ASSERT_EQ(canTxFrame.data[3], CMDERR_INV_NV_IDX);
 
    //--------------------------------------------
@@ -354,7 +390,10 @@ TEST(CBUS, basicSLiM)
 
    // Should return command error invalid NV index
    ASSERT_TRUE(mockGetCanTx(canTxFrame));
+   ASSERT_EQ(canTxFrame.len, 4);
    ASSERT_EQ(canTxFrame.data[0], OPC_CMDERR);
+   ASSERT_EQ(canTxFrame.data[1], 0x00);
+   ASSERT_EQ(canTxFrame.data[2], 0x00);
    ASSERT_EQ(canTxFrame.data[3], CMDERR_INVALID_EVENT);
 
    // Try invalid ID 100
@@ -364,7 +403,10 @@ TEST(CBUS, basicSLiM)
 
    // Should return command error invalid NV index
    ASSERT_TRUE(mockGetCanTx(canTxFrame));
+   ASSERT_EQ(canTxFrame.len, 4);
    ASSERT_EQ(canTxFrame.data[0], OPC_CMDERR);
+   ASSERT_EQ(canTxFrame.data[1], 0x00);
+   ASSERT_EQ(canTxFrame.data[2], 0x00);
    ASSERT_EQ(canTxFrame.data[3], CMDERR_INVALID_EVENT);
 
    // Set to valid ID
@@ -377,10 +419,15 @@ TEST(CBUS, basicSLiM)
    mockAddRxFrame(canRxFrame);
    cbus.process();
 
-   // Should return value written
+   // Should return value previously written
    ASSERT_TRUE(mockGetCanTx(canTxFrame));
    ASSERT_EQ(canTxFrame.id, 0x12);
+   ASSERT_EQ(canTxFrame.len, 5);
    ASSERT_EQ(canTxFrame.data[0], OPC_NVANS);
+   ASSERT_EQ(canTxFrame.data[1], 0x00);
+   ASSERT_EQ(canTxFrame.data[2], 0x00);
+   ASSERT_EQ(canTxFrame.data[3], 1);
+   ASSERT_EQ(canTxFrame.data[4], 1);
 }
 
 //-----------------------------------------------------------------------------
@@ -480,6 +527,7 @@ TEST(CBUS, testFLiM_EventLearn)
 
    // Should generate a WRAK
    ASSERT_TRUE(mockGetCanTx(canTxFrame));
+   ASSERT_EQ(canTxFrame.len, 3);
    ASSERT_EQ(canTxFrame.data[0], OPC_WRACK);
    ASSERT_EQ(canTxFrame.data[1], ourNNHi);
    ASSERT_EQ(canTxFrame.data[2], ourNNLo);
@@ -495,7 +543,10 @@ TEST(CBUS, testFLiM_EventLearn)
    cbus.process();
 
    ASSERT_TRUE(mockGetCanTx(canTxFrame));
+   ASSERT_EQ(canTxFrame.len, 4);
    ASSERT_EQ(canTxFrame.data[0], OPC_NUMEV);
+   ASSERT_EQ(canTxFrame.data[1], ourNNHi);
+   ASSERT_EQ(canTxFrame.data[2], ourNNLo);
    ASSERT_EQ(canTxFrame.data[3], 0x01); // One event
 
    // Read number of event entries left
@@ -504,7 +555,10 @@ TEST(CBUS, testFLiM_EventLearn)
    cbus.process();
 
    ASSERT_TRUE(mockGetCanTx(canTxFrame));
+   ASSERT_EQ(canTxFrame.len ,4);
    ASSERT_EQ(canTxFrame.data[0], OPC_EVNLF);
+   ASSERT_EQ(canTxFrame.data[1], ourNNHi);
+   ASSERT_EQ(canTxFrame.data[2], ourNNLo);
    ASSERT_EQ(canTxFrame.data[3], config.EE_MAX_EVENTS - 1);
 
    // Read all configured events
@@ -514,6 +568,7 @@ TEST(CBUS, testFLiM_EventLearn)
 
    // One event should be configured
    ASSERT_TRUE(mockGetCanTx(canTxFrame));
+   ASSERT_EQ(canTxFrame.len, 8);
    ASSERT_EQ(canTxFrame.data[0], OPC_ENRSP);
    ASSERT_EQ(canTxFrame.data[1], ourNNHi);
    ASSERT_EQ(canTxFrame.data[2], ourNNLo);
@@ -526,13 +581,27 @@ TEST(CBUS, testFLiM_EventLearn)
    // Should have no more responses
    ASSERT_FALSE(mockGetCanTx(canTxFrame));
 
-   // Read event by index
+   // Read event by index - invalid index (only 0x00 configured)
+   canRxFrame = {.data{OPC_NENRD, ourNNHi, ourNNLo, 0x01}};
+   mockAddRxFrame(canRxFrame);
+   cbus.process();
+
+   // Expect a command error response
+   ASSERT_TRUE(mockGetCanTx(canTxFrame));
+   ASSERT_EQ(canTxFrame.len, 4);
+   ASSERT_EQ(canTxFrame.data[0], OPC_CMDERR);
+   ASSERT_EQ(canTxFrame.data[1], ourNNHi);
+   ASSERT_EQ(canTxFrame.data[2], ourNNLo);
+   ASSERT_EQ(canTxFrame.data[3], CMDERR_INVALID_EVENT);
+
+   // Read event by index - valid index
    canRxFrame = {.data{OPC_NENRD, ourNNHi, ourNNLo, 0x00}};
    mockAddRxFrame(canRxFrame);
    cbus.process();
 
    // One event should be configured
    ASSERT_TRUE(mockGetCanTx(canTxFrame));
+   ASSERT_EQ(canTxFrame.len, 8);
    ASSERT_EQ(canTxFrame.data[0], OPC_ENRSP);
    ASSERT_EQ(canTxFrame.data[1], ourNNHi);
    ASSERT_EQ(canTxFrame.data[2], ourNNLo);
@@ -549,6 +618,7 @@ TEST(CBUS, testFLiM_EventLearn)
 
    // Should generate a NEVAL
    ASSERT_TRUE(mockGetCanTx(canTxFrame));
+   ASSERT_EQ(canTxFrame.len, 6);
    ASSERT_EQ(canTxFrame.data[0], OPC_NEVAL);
    ASSERT_EQ(canTxFrame.data[1], ourNNHi);
    ASSERT_EQ(canTxFrame.data[2], ourNNLo);
@@ -568,6 +638,7 @@ TEST(CBUS, testFLiM_EventLearn)
 
    // Should generate a WRAK
    ASSERT_TRUE(mockGetCanTx(canTxFrame));
+   ASSERT_EQ(canTxFrame.len, 3);
    ASSERT_EQ(canTxFrame.data[0], OPC_WRACK);
    ASSERT_EQ(canTxFrame.data[1], ourNNHi);
    ASSERT_EQ(canTxFrame.data[2], ourNNLo);
@@ -579,6 +650,7 @@ TEST(CBUS, testFLiM_EventLearn)
 
    // One event should be configured
    ASSERT_TRUE(mockGetCanTx(canTxFrame));
+   ASSERT_EQ(canTxFrame.len, 8);
    ASSERT_EQ(canTxFrame.data[0], OPC_ENRSP);
    ASSERT_EQ(canTxFrame.data[1], ourNNHi);
    ASSERT_EQ(canTxFrame.data[2], ourNNLo);
@@ -595,6 +667,7 @@ TEST(CBUS, testFLiM_EventLearn)
 
    // Should generate a EVANS
    ASSERT_TRUE(mockGetCanTx(canTxFrame));
+   ASSERT_EQ(canTxFrame.len, 7);
    ASSERT_EQ(canTxFrame.data[0], OPC_EVANS);
    ASSERT_EQ(canTxFrame.data[1], ourNNHi);
    ASSERT_EQ(canTxFrame.data[2], ourNNLo);
@@ -610,6 +683,7 @@ TEST(CBUS, testFLiM_EventLearn)
 
    // Should generate a WRAK
    ASSERT_TRUE(mockGetCanTx(canTxFrame));
+   ASSERT_EQ(canTxFrame.len, 3);
    ASSERT_EQ(canTxFrame.data[0], OPC_WRACK);
    ASSERT_EQ(canTxFrame.data[1], ourNNHi);
    ASSERT_EQ(canTxFrame.data[2], ourNNLo);
@@ -620,7 +694,10 @@ TEST(CBUS, testFLiM_EventLearn)
    cbus.process();
 
    ASSERT_TRUE(mockGetCanTx(canTxFrame));
+   ASSERT_EQ(canTxFrame.len, 4);
    ASSERT_EQ(canTxFrame.data[0], OPC_NUMEV);
+   ASSERT_EQ(canTxFrame.data[1], ourNNHi);
+   ASSERT_EQ(canTxFrame.data[2], ourNNLo);
    ASSERT_EQ(canTxFrame.data[3], 0x02); // Two events
 
    // Try to unlearn the first event
@@ -637,7 +714,10 @@ TEST(CBUS, testFLiM_EventLearn)
    cbus.process();
 
    ASSERT_TRUE(mockGetCanTx(canTxFrame));
+   ASSERT_EQ(canTxFrame.len, 4);
    ASSERT_EQ(canTxFrame.data[0], OPC_NUMEV);
+   ASSERT_EQ(canTxFrame.data[1], ourNNHi);
+   ASSERT_EQ(canTxFrame.data[2], ourNNLo);
    ASSERT_EQ(canTxFrame.data[3], 0x01); // One events
 
    // Try putting the module into learn mode while in learn
@@ -655,6 +735,7 @@ TEST(CBUS, testFLiM_EventLearn)
 
    // Should generate a WRAK
    ASSERT_TRUE(mockGetCanTx(canTxFrame));
+   ASSERT_EQ(canTxFrame.len, 3);
    ASSERT_EQ(canTxFrame.data[0], OPC_WRACK);
    ASSERT_EQ(canTxFrame.data[1], ourNNHi);
    ASSERT_EQ(canTxFrame.data[2], ourNNLo);
@@ -665,7 +746,10 @@ TEST(CBUS, testFLiM_EventLearn)
    cbus.process();
 
    ASSERT_TRUE(mockGetCanTx(canTxFrame));
+   ASSERT_EQ(canTxFrame.len, 4);
    ASSERT_EQ(canTxFrame.data[0], OPC_NUMEV);
+   ASSERT_EQ(canTxFrame.data[1], ourNNHi);
+   ASSERT_EQ(canTxFrame.data[2], ourNNLo);
    ASSERT_EQ(canTxFrame.data[3], 0x00); // No events
 
    // Set learn mode for another node - should take us out of learn mode
@@ -829,6 +913,7 @@ TEST(CBUS, testFLiM_Events)
 
       // Should generate a WRAK
       ASSERT_TRUE(mockGetCanTx(canTxFrame));
+      ASSERT_EQ(canTxFrame.len, 3);
       ASSERT_EQ(canTxFrame.data[0], OPC_WRACK);
       ASSERT_EQ(canTxFrame.data[1], ourNNHi);
       ASSERT_EQ(canTxFrame.data[2], ourNNLo);
@@ -845,7 +930,10 @@ TEST(CBUS, testFLiM_Events)
    cbus.process();
 
    ASSERT_TRUE(mockGetCanTx(canTxFrame));
+   ASSERT_EQ(canTxFrame.len, 4);
    ASSERT_EQ(canTxFrame.data[0], OPC_NUMEV);
+   ASSERT_EQ(canTxFrame.data[1], ourNNHi);
+   ASSERT_EQ(canTxFrame.data[2], ourNNLo);
    ASSERT_EQ(canTxFrame.data[3], config.EE_MAX_EVENTS);
 
    // Send ACON for each event in turn
@@ -1060,6 +1148,7 @@ TEST(CBUS, testFLiM_ShortEvents)
 
       // Should generate a WRAK
       ASSERT_TRUE(mockGetCanTx(canTxFrame));
+      ASSERT_EQ(canTxFrame.len, 3);
       ASSERT_EQ(canTxFrame.data[0], OPC_WRACK);
       ASSERT_EQ(canTxFrame.data[1], ourNNHi);
       ASSERT_EQ(canTxFrame.data[2], ourNNLo);
@@ -1076,7 +1165,10 @@ TEST(CBUS, testFLiM_ShortEvents)
    cbus.process();
 
    ASSERT_TRUE(mockGetCanTx(canTxFrame));
+   ASSERT_EQ(canTxFrame.len, 4);
    ASSERT_EQ(canTxFrame.data[0], OPC_NUMEV);
+   ASSERT_EQ(canTxFrame.data[1], ourNNHi);
+   ASSERT_EQ(canTxFrame.data[2], ourNNLo);
    ASSERT_EQ(canTxFrame.data[3], config.EE_MAX_EVENTS);
 
    // Send ASON for each event in turn
@@ -1120,14 +1212,15 @@ TEST(CBUS, testFLiM_ShortEvents)
    canRxFrame = {.len=5, .data{OPC_ASOF1, 0, 0, 1, 1}};
    mockAddRxFrame(canRxFrame);
    cbus.process();
-
-
 }
 
 //-----------------------------------------------------------------------------
 
 TEST(CBUS, testFLiM_EventSend)
 {
+   static constexpr const uint8_t eventHi {1};
+   static constexpr const uint8_t eventLo {2};
+
    uint64_t sysTime = 0ULL;
 
    MockPicoSdk mockPicoSdk;
@@ -1190,31 +1283,282 @@ TEST(CBUS, testFLiM_EventSend)
    EXPECT_CALL(cbus, sendMessageImpl(_,false,false,_))
       .WillRepeatedly(testing::Invoke(&mockCanTx));
 
-   // Send Event
-   cbus.sendEvent(1,1,true);
+   // Send ACON - specifying node ID
+   cbus.sendEvent((othNNHi << 8) | othNNLo, (eventHi << 8) | eventLo, true);
    ASSERT_TRUE(mockGetCanTx(canTxFrame));
+   ASSERT_EQ(canTxFrame.len, 5);
+   ASSERT_EQ(canTxFrame.data[0], OPC_ACON);
+   ASSERT_EQ(canTxFrame.data[1], othNNHi);
+   ASSERT_EQ(canTxFrame.data[2], othNNLo);
+   ASSERT_EQ(canTxFrame.data[3], eventHi);
+   ASSERT_EQ(canTxFrame.data[4], eventLo);
 
-   cbus.sendEvent(1,1,false);
+   // Send ACOF - specifying node ID
+   cbus.sendEvent((othNNHi << 8) | othNNLo, (eventHi << 8) | eventLo, false);
    ASSERT_TRUE(mockGetCanTx(canTxFrame));
+   ASSERT_EQ(canTxFrame.len, 5);
+   ASSERT_EQ(canTxFrame.data[0], OPC_ACOF);
+   ASSERT_EQ(canTxFrame.data[1], othNNHi);
+   ASSERT_EQ(canTxFrame.data[2], othNNLo);
+   ASSERT_EQ(canTxFrame.data[3], eventHi);
+   ASSERT_EQ(canTxFrame.data[4], eventLo);
 
-   cbus.sendMyEvent(1, true);
+   // Send ACON - our node ID
+   cbus.sendMyEvent((eventHi << 8) | eventLo, true);
    ASSERT_TRUE(mockGetCanTx(canTxFrame));
+   ASSERT_EQ(canTxFrame.len, 5);
+   ASSERT_EQ(canTxFrame.data[0], OPC_ACON);
+   ASSERT_EQ(canTxFrame.data[1], ourNNHi);
+   ASSERT_EQ(canTxFrame.data[2], ourNNLo);
+   ASSERT_EQ(canTxFrame.data[3], eventHi);
+   ASSERT_EQ(canTxFrame.data[4], eventLo);
 
-   cbus.sendMyEvent(1, false);
+   // Send ACOFF - our node ID
+   cbus.sendMyEvent((eventHi << 8) | eventLo, false);
    ASSERT_TRUE(mockGetCanTx(canTxFrame));
+   ASSERT_EQ(canTxFrame.len, 5);
+   ASSERT_EQ(canTxFrame.data[0], OPC_ACOF);
+   ASSERT_EQ(canTxFrame.data[1], ourNNHi);
+   ASSERT_EQ(canTxFrame.data[2], ourNNLo);
+   ASSERT_EQ(canTxFrame.data[3], eventHi);
+   ASSERT_EQ(canTxFrame.data[4], eventLo);
 
-   cbus.sendDataEvent(1,2,3,4,5,6);
+   // Send ACDAT - specifying node ID
+   cbus.sendDataEvent((othNNHi << 8) | othNNLo, 1,2,3,4,5);
    ASSERT_TRUE(mockGetCanTx(canTxFrame));
+   ASSERT_EQ(canTxFrame.len, 8);
+   ASSERT_EQ(canTxFrame.data[0], OPC_ACDAT);
+   ASSERT_EQ(canTxFrame.data[1], othNNHi);
+   ASSERT_EQ(canTxFrame.data[2], othNNLo);
+   ASSERT_EQ(canTxFrame.data[3], 1);
+   ASSERT_EQ(canTxFrame.data[4], 2);
+   ASSERT_EQ(canTxFrame.data[5], 3);
+   ASSERT_EQ(canTxFrame.data[6], 4);
+   ASSERT_EQ(canTxFrame.data[7], 5);
 
-   cbus.sendEventWithData(1,2,true,3,1,2,3); // Long event
+   // Send ACON
+   cbus.sendEventWithData((othNNHi << 8) | othNNLo, (eventHi << 8) | eventLo, true, 0);
    ASSERT_TRUE(mockGetCanTx(canTxFrame));
+   ASSERT_EQ(canTxFrame.len, 5);
+   ASSERT_EQ(canTxFrame.data[0], OPC_ACON);
+   ASSERT_EQ(canTxFrame.data[1], othNNHi);
+   ASSERT_EQ(canTxFrame.data[2], othNNLo);
+   ASSERT_EQ(canTxFrame.data[3], eventHi);
+   ASSERT_EQ(canTxFrame.data[4], eventLo);
 
-   cbus.sendEventWithData(0,2,true,3,1,2,3); // Short event
+   // Send ACON1
+   cbus.sendEventWithData((othNNHi << 8) | othNNLo, (eventHi << 8) | eventLo, true, 1, 1);
    ASSERT_TRUE(mockGetCanTx(canTxFrame));
+   ASSERT_EQ(canTxFrame.len, 6);
+   ASSERT_EQ(canTxFrame.data[0], OPC_ACON1);
+   ASSERT_EQ(canTxFrame.data[1], othNNHi);
+   ASSERT_EQ(canTxFrame.data[2], othNNLo);
+   ASSERT_EQ(canTxFrame.data[3], eventHi);
+   ASSERT_EQ(canTxFrame.data[4], eventLo);
+   ASSERT_EQ(canTxFrame.data[5], 1);
 
-   cbus.sendOpcNN(OPC_ACK,1,5,1,2,3,4,5);
+   // Send ACON2
+   cbus.sendEventWithData((othNNHi << 8) | othNNLo, (eventHi << 8) | eventLo, true, 2, 1,2);
    ASSERT_TRUE(mockGetCanTx(canTxFrame));
+   ASSERT_EQ(canTxFrame.len, 7);
+   ASSERT_EQ(canTxFrame.data[0], OPC_ACON2);
+   ASSERT_EQ(canTxFrame.data[1], othNNHi);
+   ASSERT_EQ(canTxFrame.data[2], othNNLo);
+   ASSERT_EQ(canTxFrame.data[3], eventHi);
+   ASSERT_EQ(canTxFrame.data[4], eventLo);
+   ASSERT_EQ(canTxFrame.data[5], 1);
+   ASSERT_EQ(canTxFrame.data[6], 2);
 
+   // Send ACON3
+   cbus.sendEventWithData((othNNHi << 8) | othNNLo, (eventHi << 8) | eventLo, true, 3, 1,2,3);
+   ASSERT_TRUE(mockGetCanTx(canTxFrame));
+   ASSERT_EQ(canTxFrame.len, 8);
+   ASSERT_EQ(canTxFrame.data[0], OPC_ACON3);
+   ASSERT_EQ(canTxFrame.data[1], othNNHi);
+   ASSERT_EQ(canTxFrame.data[2], othNNLo);
+   ASSERT_EQ(canTxFrame.data[3], eventHi);
+   ASSERT_EQ(canTxFrame.data[4], eventLo);
+   ASSERT_EQ(canTxFrame.data[5], 1);
+   ASSERT_EQ(canTxFrame.data[6], 2);
+   ASSERT_EQ(canTxFrame.data[7], 3);
+
+   // Send ACOF
+   cbus.sendEventWithData((othNNHi << 8) | othNNLo, (eventHi << 8) | eventLo, false, 0);
+   ASSERT_TRUE(mockGetCanTx(canTxFrame));
+   ASSERT_EQ(canTxFrame.len, 5);
+   ASSERT_EQ(canTxFrame.data[0], OPC_ACOF);
+   ASSERT_EQ(canTxFrame.data[1], othNNHi);
+   ASSERT_EQ(canTxFrame.data[2], othNNLo);
+   ASSERT_EQ(canTxFrame.data[3], eventHi);
+   ASSERT_EQ(canTxFrame.data[4], eventLo);
+
+   // Send ACOF1
+   cbus.sendEventWithData((othNNHi << 8) | othNNLo, (eventHi << 8) | eventLo, false, 1, 1);
+   ASSERT_TRUE(mockGetCanTx(canTxFrame));
+   ASSERT_EQ(canTxFrame.len, 6);
+   ASSERT_EQ(canTxFrame.data[0], OPC_ACOF1);
+   ASSERT_EQ(canTxFrame.data[1], othNNHi);
+   ASSERT_EQ(canTxFrame.data[2], othNNLo);
+   ASSERT_EQ(canTxFrame.data[3], eventHi);
+   ASSERT_EQ(canTxFrame.data[4], eventLo);
+   ASSERT_EQ(canTxFrame.data[5], 1);
+
+   // Send ACOF2
+   cbus.sendEventWithData((othNNHi << 8) | othNNLo, (eventHi << 8) | eventLo, false, 2, 1,2);
+   ASSERT_TRUE(mockGetCanTx(canTxFrame));
+   ASSERT_EQ(canTxFrame.len, 7);
+   ASSERT_EQ(canTxFrame.data[0], OPC_ACOF2);
+   ASSERT_EQ(canTxFrame.data[1], othNNHi);
+   ASSERT_EQ(canTxFrame.data[2], othNNLo);
+   ASSERT_EQ(canTxFrame.data[3], eventHi);
+   ASSERT_EQ(canTxFrame.data[4], eventLo);
+   ASSERT_EQ(canTxFrame.data[5], 1);
+   ASSERT_EQ(canTxFrame.data[6], 2);
+
+   // Send ACOF3
+   cbus.sendEventWithData((othNNHi << 8) | othNNLo, (eventHi << 8) | eventLo, false, 3, 1,2,3);
+   ASSERT_TRUE(mockGetCanTx(canTxFrame));
+   ASSERT_EQ(canTxFrame.len, 8);
+   ASSERT_EQ(canTxFrame.data[0], OPC_ACOF3);
+   ASSERT_EQ(canTxFrame.data[1], othNNHi);
+   ASSERT_EQ(canTxFrame.data[2], othNNLo);
+   ASSERT_EQ(canTxFrame.data[3], eventHi);
+   ASSERT_EQ(canTxFrame.data[4], eventLo);
+   ASSERT_EQ(canTxFrame.data[5], 1);
+   ASSERT_EQ(canTxFrame.data[6], 2);
+   ASSERT_EQ(canTxFrame.data[7], 3);
+
+   // Send ASON
+   cbus.sendEventWithData(0, (eventHi << 8) | eventLo, true, 0);
+   ASSERT_TRUE(mockGetCanTx(canTxFrame));
+   ASSERT_EQ(canTxFrame.len, 5);
+   ASSERT_EQ(canTxFrame.data[0], OPC_ASON);
+   ASSERT_EQ(canTxFrame.data[1], ourNNHi);
+   ASSERT_EQ(canTxFrame.data[2], ourNNLo);
+   ASSERT_EQ(canTxFrame.data[3], eventHi);
+   ASSERT_EQ(canTxFrame.data[4], eventLo);
+
+   // Send ASON1
+   cbus.sendEventWithData(0, (eventHi << 8) | eventLo, true, 1, 1);
+   ASSERT_TRUE(mockGetCanTx(canTxFrame));
+   ASSERT_EQ(canTxFrame.len, 6);
+   ASSERT_EQ(canTxFrame.data[0], OPC_ASON1);
+   ASSERT_EQ(canTxFrame.data[1], ourNNHi);
+   ASSERT_EQ(canTxFrame.data[2], ourNNLo);
+   ASSERT_EQ(canTxFrame.data[3], eventHi);
+   ASSERT_EQ(canTxFrame.data[4], eventLo);
+   ASSERT_EQ(canTxFrame.data[5], 1);
+
+   // Send ASOF2
+   cbus.sendEventWithData(0, (eventHi << 8) | eventLo, true, 2, 1,2);
+   ASSERT_TRUE(mockGetCanTx(canTxFrame));
+   ASSERT_EQ(canTxFrame.len, 7);
+   ASSERT_EQ(canTxFrame.data[0], OPC_ASON2);
+   ASSERT_EQ(canTxFrame.data[1], ourNNHi);
+   ASSERT_EQ(canTxFrame.data[2], ourNNLo);
+   ASSERT_EQ(canTxFrame.data[3], eventHi);
+   ASSERT_EQ(canTxFrame.data[4], eventLo);
+   ASSERT_EQ(canTxFrame.data[5], 1);
+   ASSERT_EQ(canTxFrame.data[6], 2);
+
+   // Send ASOF3
+   cbus.sendEventWithData(0, (eventHi << 8) | eventLo, true, 3, 1,2,3);
+   ASSERT_TRUE(mockGetCanTx(canTxFrame));
+   ASSERT_EQ(canTxFrame.len, 8);
+   ASSERT_EQ(canTxFrame.data[0], OPC_ASON3);
+   ASSERT_EQ(canTxFrame.data[1], ourNNHi);
+   ASSERT_EQ(canTxFrame.data[2], ourNNLo);
+   ASSERT_EQ(canTxFrame.data[3], eventHi);
+   ASSERT_EQ(canTxFrame.data[4], eventLo);
+   ASSERT_EQ(canTxFrame.data[5], 1);
+   ASSERT_EQ(canTxFrame.data[6], 2);
+   ASSERT_EQ(canTxFrame.data[7], 3);
+
+   // Send ASOF
+   cbus.sendEventWithData(0, (eventHi << 8) | eventLo, false, 0);
+   ASSERT_TRUE(mockGetCanTx(canTxFrame));
+   ASSERT_EQ(canTxFrame.len, 5);
+   ASSERT_EQ(canTxFrame.data[0], OPC_ASOF);
+   ASSERT_EQ(canTxFrame.data[1], ourNNHi);
+   ASSERT_EQ(canTxFrame.data[2], ourNNLo);
+   ASSERT_EQ(canTxFrame.data[3], eventHi);
+   ASSERT_EQ(canTxFrame.data[4], eventLo);
+
+   // Send ASOF1
+   cbus.sendEventWithData(0, (eventHi << 8) | eventLo, false, 1, 1);
+   ASSERT_TRUE(mockGetCanTx(canTxFrame));
+   ASSERT_EQ(canTxFrame.len, 6);
+   ASSERT_EQ(canTxFrame.data[0], OPC_ASOF1);
+   ASSERT_EQ(canTxFrame.data[1], ourNNHi);
+   ASSERT_EQ(canTxFrame.data[2], ourNNLo);
+   ASSERT_EQ(canTxFrame.data[3], eventHi);
+   ASSERT_EQ(canTxFrame.data[4], eventLo);
+   ASSERT_EQ(canTxFrame.data[5], 1);
+
+   // Send ASOF2
+   cbus.sendEventWithData(0, (eventHi << 8) | eventLo, false, 2, 1,2);
+   ASSERT_TRUE(mockGetCanTx(canTxFrame));
+   ASSERT_EQ(canTxFrame.len, 7);
+   ASSERT_EQ(canTxFrame.data[0], OPC_ASOF2);
+   ASSERT_EQ(canTxFrame.data[1], ourNNHi);
+   ASSERT_EQ(canTxFrame.data[2], ourNNLo);
+   ASSERT_EQ(canTxFrame.data[3], eventHi);
+   ASSERT_EQ(canTxFrame.data[4], eventLo);
+   ASSERT_EQ(canTxFrame.data[5], 1);
+   ASSERT_EQ(canTxFrame.data[6], 2);
+
+   // Send ASOF3
+   cbus.sendEventWithData(0, (eventHi << 8) | eventLo, false, 3, 1,2,3);
+   ASSERT_TRUE(mockGetCanTx(canTxFrame));
+   ASSERT_EQ(canTxFrame.len, 8);
+   ASSERT_EQ(canTxFrame.data[0], OPC_ASOF3);
+   ASSERT_EQ(canTxFrame.data[1], ourNNHi);
+   ASSERT_EQ(canTxFrame.data[2], ourNNLo);
+   ASSERT_EQ(canTxFrame.data[3], eventHi);
+   ASSERT_EQ(canTxFrame.data[4], eventLo);
+   ASSERT_EQ(canTxFrame.data[5], 1);
+   ASSERT_EQ(canTxFrame.data[6], 2);
+   ASSERT_EQ(canTxFrame.data[7], 3);
+
+   // Send OPC (no additional data)
+   cbus.sendSingleOpc(OPC_ACK);
+   ASSERT_TRUE(mockGetCanTx(canTxFrame));
+   ASSERT_EQ(canTxFrame.len, 1);
+   ASSERT_EQ(canTxFrame.data[0], OPC_ACK);
+
+   // Send OPC - OPC_NERD is a 3 data byte request
+   cbus.sendOpcNN(OPC_NERD,(othNNHi << 8) | othNNLo, 1, 1);
+   ASSERT_TRUE(mockGetCanTx(canTxFrame));
+   ASSERT_EQ(canTxFrame.len, 4);
+   ASSERT_EQ(canTxFrame.data[0], OPC_NERD);
+   ASSERT_EQ(canTxFrame.data[1], othNNHi);
+   ASSERT_EQ(canTxFrame.data[2], othNNLo);
+   ASSERT_EQ(canTxFrame.data[3], 1);
+
+   // Send OPC - OPC_NERD is a 3 data byte request
+   cbus.sendOpcMyNN(OPC_NERD, 1, 1);
+   ASSERT_TRUE(mockGetCanTx(canTxFrame));
+   ASSERT_EQ(canTxFrame.len, 4);
+   ASSERT_EQ(canTxFrame.data[0], OPC_NERD);
+   ASSERT_EQ(canTxFrame.data[1], ourNNHi);
+   ASSERT_EQ(canTxFrame.data[2], ourNNLo);
+   ASSERT_EQ(canTxFrame.data[3], 1);
+
+   // Setup to consume our own events
+   CBUScoe coe(10);
+   cbus.consumeOwnEvents(&coe);
+
+   // Send an event - ACON
+   cbus.sendMyEvent((eventHi << 8) | eventLo, true);
+   ASSERT_TRUE(mockGetCanTx(canTxFrame));
+   ASSERT_EQ(canTxFrame.len, 5);
+   ASSERT_EQ(canTxFrame.data[0], OPC_ACON);
+   ASSERT_EQ(canTxFrame.data[1], ourNNHi);
+   ASSERT_EQ(canTxFrame.data[2], ourNNLo);
+   ASSERT_EQ(canTxFrame.data[3], eventHi);
+   ASSERT_EQ(canTxFrame.data[4], eventLo);
+
+   cbus.process();
 }
 
 //-----------------------------------------------------------------------------
@@ -1270,7 +1614,6 @@ TEST(CBUS, testFLiM_enumCANID)
    // Check Node ID
    uint16_t nn = config.getNodeNum ();
    ASSERT_EQ(nn, (ourNNHi << 8) | ourNNLo);
-
 
    // CAN Frames for sending and receiving
    CANFrame canRxFrame;
@@ -1426,9 +1769,122 @@ TEST(CBUS, testFLiM_enumCANID)
    ASSERT_EQ(config.getCANID(), 1);
 }
 
+//-----------------------------------------------------------------------------
+
+TEST(CBUS, testFLiM_ModuleSetup)
+{
+   uint64_t sysTime = 0ULL;
+
+   MockPicoSdk mockPicoSdk;
+   mockPicoSdkApi.mockPicoSdk = &mockPicoSdk;
+
+   // Clear mock transport
+   clearRxFrames();
+   clearTxFrames();
+
+   EXPECT_CALL(mockPicoSdk, flash_range_program(_,_,_)).Times(AnyNumber());
+   EXPECT_CALL(mockPicoSdk, flash_range_erase(0, FLASH_SECTOR_SIZE)).Times(AnyNumber());
+
+   dummyFlashInit();
+
+   // Manage system time via lambda
+   EXPECT_CALL(mockPicoSdk, get_absolute_time)
+       .WillRepeatedly(testing::Invoke(
+        [&sysTime]() -> uint64_t {
+            return sysTime * 1000; // time specified in milliseconds
+        }
+    ));
+
+   // Configuration
+   CBUSConfig config;
+   config.EE_NVS_START = 10;    // Offset start of Node Variables
+   config.EE_NUM_NVS = 10;      // Number of Node Variables
+   config.EE_EVENTS_START = 20; // Offset start of Events
+   config.EE_MAX_EVENTS = 10;   // Maximum number of events
+   config.EE_NUM_EVS = 1;       // Number of Event Variables per event (the InEventID)
+   config.EE_BYTES_PER_EVENT = (config.EE_NUM_EVS + 4);
+
+   config.setEEPROMtype(EEPROM_TYPE::EEPROM_USES_FLASH);
+
+   // Force persistent storage to indicate FLiM mode
+   uint8_t flimConfig[] = {0x1, 0x00, ourNNHi, ourNNLo, 0x00, 0x00};
+   memcpy(dummyFlash, flimConfig, sizeof(flimConfig));
+
+   // Initialize from storage
+   config.begin();
+
+   // Create UUT - with mocked I/O interfaces, initiate FLiM
+   CBUSMock cbus(config);
+
+   // CAN Frames for sending and receiving
+   CANFrame canRxFrame;
+   CANFrame canTxFrame;
+
+   // Hook get message into mock CAN transport
+   EXPECT_CALL(cbus, getNextMessage)
+      .WillRepeatedly(testing::Invoke(&mockCanRx));
+
+   // Hook frame available API into mock CAN transport
+   EXPECT_CALL(cbus, available)
+      .WillRepeatedly(testing::Invoke(&mockCanRxAvailable));
+
+   // Hook frame transmit capture into mock CAN transport
+   EXPECT_CALL(cbus, sendMessageImpl(_,false,false,_))
+      .WillRepeatedly(testing::Invoke(&mockCanTx));
+
+   // Setup as FLiM
+   cbus.indicateFLiMMode(true);
+
+   // Assign params
+   CBUSParams params(config);
+   cbus.setParams(params.getParams());
+   cbus.process();
+
+   // Setup module info
+   params.setModuleId(0x50);
+
+   // Query all nodes request
+   canRxFrame = {.len=1, .data{OPC_QNN}};
+   mockAddRxFrame(canRxFrame);
+   cbus.process();
+
+   // Expect a PNN response
+   ASSERT_TRUE(mockGetCanTx(canTxFrame));
+   ASSERT_EQ(canTxFrame.len, 6);
+   ASSERT_EQ(canTxFrame.data[0], OPC_PNN);
+   ASSERT_EQ(canTxFrame.data[1], ourNNHi);
+   ASSERT_EQ(canTxFrame.data[2], ourNNLo);
+   ASSERT_EQ(canTxFrame.data[3], MANU_MERG); // Manufacturer
+   ASSERT_EQ(canTxFrame.data[4], 0x50);      // Module ID
+   ASSERT_EQ(canTxFrame.data[5], cbus.getParFlags());   // Flags 0x04
+
+   //// TODO - do here or move
+   cbus.revertSLiM();
+
+   ASSERT_TRUE(mockGetCanTx(canTxFrame));
+   ASSERT_EQ(canTxFrame.len, 3);
+   ASSERT_EQ(canTxFrame.data[0], OPC_NNREL);
+   ASSERT_EQ(canTxFrame.data[1], ourNNHi);
+   ASSERT_EQ(canTxFrame.data[2], ourNNLo);
+
+   // Confirm / negotiate NN
+   cbus.initFLiM();
+
+   ASSERT_TRUE(mockGetCanTx(canTxFrame));
+   ASSERT_EQ(canTxFrame.len, 3);
+   ASSERT_EQ(canTxFrame.data[0], OPC_RQNN);
+   ASSERT_EQ(canTxFrame.data[1], 0);
+   ASSERT_EQ(canTxFrame.data[2], 0);
+
+   // Send / confirm NN
+   canRxFrame = {.len=3, .data{OPC_SNN, 0xAB, 0xCD}};
+   mockAddRxFrame(canRxFrame);
+   cbus.process();
+}
+
 // Long / short events()
 
-// CAN ID - Self Enumeration
+// Consume own events
 
 // Grid Connect interface
 

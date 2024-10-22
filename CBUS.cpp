@@ -431,7 +431,7 @@ bool CBUSbase::sendEventWithData(uint16_t eventNode, const uint16_t eventNum, co
    if (eventNode == 0)
    {
       frame.data[0] |= 0x08;                   // Short event opcode
-      eventNode = m_moduleConfig.getNodeNum(); // Add module node id
+      eventNode = m_moduleConfig.getNodeNum(); // Add module node id (for diagnostics)
    }
 
    // Check if off event
