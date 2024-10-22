@@ -20,7 +20,7 @@ jobs:
     - name: Run Tests
       run: |
        ${{github.workspace}}/build/tests/CBUSCircularBuffertest
-       ${{github.workspace}}/build/tests/CBUSConfigTest
+       ${{github.workspace}}/build/tests/CBUSConfigtest
        ${{github.workspace}}/build/tests/CBUSLEDtest
        ${{github.workspace}}/build/tests/CBUSLongMessagetest
        ${{github.workspace}}/build/tests/CBUSParamstest
