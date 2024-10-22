@@ -1,4 +1,4 @@
-name: my-workflow-name
+name: run-unit-tests
 
 on:
   push:
@@ -32,3 +32,16 @@ jobs:
          html-out: coverage.html
          html-details: true
          html-title: CBUSPicoLib Test Coverage Report
+    - name: Create a temporary artifact folder
+      working-directory: ${{github.workspace}}
+      run: mkdir downloads
+    - name: Add artifacts to publish
+      run: |
+         cd downloads
+         cp ${{github.workspace}}/coverage.html .
+         cd ..
+    - name: Upload build artifacts
+      uses: actions/upload-artifact@v4
+      with: 
+         name: coverage-report
+         path: downloads/

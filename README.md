@@ -1,5 +1,7 @@
 # Introduction
 
+[![run-unit-tests](https://github.com/kkimber/CBUSPicoLib/actions/workflows/unit_tests.yml/badge.svg)](https://github.com/kkimber/CBUSPicoLib/actions/workflows/unit_tests.yml)
+
 This repository provides source code CBUS functionality on a Raspberry Pico.
 
 The code provides:
