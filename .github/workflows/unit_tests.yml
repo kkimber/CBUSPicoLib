@@ -35,13 +35,14 @@ jobs:
             'tests*'
          html-out: coverage.html
          html-title: CBUSPicoLib Test Coverage Report
+         html-details: true
     - name: Create a temporary artifact folder
       working-directory: ${{github.workspace}}
       run: mkdir downloads
     - name: Add artifacts to publish
       run: |
          cd downloads
-         cp ${{github.workspace}}/coverage.html .
+         cp ${{github.workspace}}/coverage.* .
          cd ..
     - name: Upload build artifacts
       uses: actions/upload-artifact@v4
