@@ -1,6 +1,6 @@
 # Introduction
 
-[![run-unit-tests](https://github.com/kkimber/CBUSPicoLib/actions/workflows/unit_tests.yml/badge.svg)](https://github.com/kkimber/CBUSPicoLib/actions/workflows/unit_tests.yml)
+[![run-unit-tests](https://github.com/kkimber/CBUSPicoLib/actions/workflows/unit_tests.yml/badge.svg)](https://github.com/kkimber/CBUSPicoLib/actions/workflows/unit_tests.yml) [![CodeQL](https://github.com/kkimber/CBUSPicoLib/actions/workflows/github-code-scanning/codeql/badge.svg)](https://github.com/kkimber/CBUSPicoLib/actions/workflows/github-code-scanning/codeql) [![CodeFactor](https://www.codefactor.io/repository/github/kkimber/cbuspicolib/badge)](https://www.codefactor.io/repository/github/kkimber/cbuspicolib)
 
 This repository provides source code CBUS functionality on a Raspberry Pico.
 
