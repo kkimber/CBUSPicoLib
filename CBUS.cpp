@@ -721,7 +721,6 @@ void CBUSbase::process(uint8_t num_messages)
          // short flicker if not consumed
          m_ledYlw.pulse(!bConsumed);
       }
-
    } // while messages available
 
    //

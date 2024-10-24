@@ -47,7 +47,6 @@
 
 class CBUSLED
 {
-
 public:
    CBUSLED();
    void setPin(const uint8_t pin);

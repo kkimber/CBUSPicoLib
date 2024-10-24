@@ -229,8 +229,6 @@ TEST(CBUSConfig, events)
 
    // attempt to get hash of invalid event
    ASSERT_EQ(config.getEvTableEntry(config.EE_MAX_EVENTS + 1), 0);
-
-
 }
 
 TEST(CBUSConfig, nodeVars)
@@ -358,7 +356,6 @@ TEST(CBUSConfig, i2cBackend)
    config.setExtEEPROMAddress(1);
    config.begin();
    config.resetModule();
-
 }
 
 TEST(CBUSConfig, flashAPI)

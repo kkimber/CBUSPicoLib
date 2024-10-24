@@ -144,7 +144,6 @@ using longMessageCallback_t = void (*)(void *fragment, const uint32_t fragment_l
 
 class CBUSbase
 {
-
 public:
    CBUSbase(CBUSConfig &config);
    virtual ~CBUSbase() {}; // explict virtual destructor for proper cleanup
@@ -272,7 +271,6 @@ protected: // protected members become private in derived classes
 
 class CBUSLongMessage
 {
-
 public:
    explicit CBUSLongMessage(CBUSbase *cbus_object_ptr);
    bool sendLongMessage(const void *msg, const uint32_t msg_len, const uint8_t stream_id, const uint8_t priority = DEFAULT_PRIORITY);
@@ -344,7 +342,6 @@ typedef struct _send_context_t
 
 class CBUSLongMessageEx : public CBUSLongMessage
 {
-
 public:
    explicit CBUSLongMessageEx(CBUSbase *cbus_object_ptr)
        : CBUSLongMessage(cbus_object_ptr) {} // derived class constructor calls the base class constructor
@@ -372,7 +369,6 @@ private:
 
 class CBUScoe
 {
-
 public:
    CBUScoe(const uint8_t num_items = 4);
    ~CBUScoe();

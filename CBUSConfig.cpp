@@ -612,7 +612,6 @@ uint8_t CBUSConfig::readEEPROM(uint32_t eeaddress)
 
    switch (m_eepromType)
    {
-
    case EEPROM_TYPE::EEPROM_EXTERNAL_I2C:
       // 8-bit addressing, write address to read
       ///@todo support 8-bit and 16-bit addressing
@@ -648,7 +647,6 @@ uint8_t CBUSConfig::readBytesEEPROM(uint32_t eeaddress, uint8_t nbytes, uint8_t 
 
    switch (m_eepromType)
    {
-
    case EEPROM_TYPE::EEPROM_EXTERNAL_I2C:
       // 8-bit addressing, write initial address to read
       /// @todo support 8-bit and 16-bit addressing
@@ -687,7 +685,6 @@ void CBUSConfig::writeEEPROM(uint32_t eeaddress, uint8_t data, bool bFlush)
 
    switch (m_eepromType)
    {
-
    case EEPROM_TYPE::EEPROM_EXTERNAL_I2C:
       // 8-bit addressing, write address for write and byte value + STOP
       /// @todo support 16 bit addressing

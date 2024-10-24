@@ -182,7 +182,6 @@ void CBUSLongMessage::processReceivedMessageFragment(const CANFrame &frame)
 
    if (!_is_receiving)
    { // not currently receiving a long message
-
       if (frame.data[2] == 0)
       { // sequence zero = a header packet with start of new stream
          if (frame.data[7] == 0)
@@ -212,16 +211,12 @@ void CBUSLongMessage::processReceivedMessageFragment(const CANFrame &frame)
    }
    else
    { // we're part way through receiving a message
-
       if ((frame.id & 0x7f) == _sender_canid)
       { // it's the same sender CANID
-
          if (frame.data[1] == _receive_stream_id)
          { // it's the same stream id
-
             if (frame.data[2] == _expected_next_receive_sequence_num)
             { // and it's the expected sequence id
-
                // for each of the maximum five payload bytes, up to the total message length and the user buffer length
                for (j = 0; j < 5; j++)
                {
@@ -265,7 +260,6 @@ void CBUSLongMessage::processReceivedMessageFragment(const CANFrame &frame)
       //{ 
       //   // a different sender CANID - ignore the fragment
       //}
-
    } // it's a continuation fragment
 
    // the sequence number may wrap from 255 to 0, which is absolutely fine
@@ -508,7 +502,6 @@ bool CBUSLongMessageEx::process(void)
    {
       if (_receive_context[i]->in_use && (SystemTick::GetMilli() - _receive_context[i]->last_fragment_received >= _receive_timeout))
       {
-
          _messagehandler(_receive_context[i]->buffer, _receive_context[i]->receive_buffer_index, _receive_context[i]->receive_stream_id, CBUS_LONG_MESSAGE_TIMEOUT_ERROR);
          _receive_context[i]->in_use = false;
          // _receive_context[i]->incoming_message_length = 0;
@@ -609,12 +602,10 @@ void CBUSLongMessageEx::processReceivedMessageFragment(const CANFrame &frame)
    { // sequence zero = a header packet with start of new stream
       if (frame.data[7] == 0)
       { // flags = 0, standard message
-
          for (i = 0; i < _num_stream_ids; i++)
          {
             if (_stream_ids[i] == frame.data[1])
             { // are we subscribed to this stream id ?
-
                // find a free receive context
                for (i = 0; i < _num_receive_contexts; i++)
                {
@@ -653,7 +644,6 @@ void CBUSLongMessageEx::processReceivedMessageFragment(const CANFrame &frame)
    }
    else
    { // continuation packet
-
       // find a matching receive context, using the stream ID and sender CANID
       for (i = 0; i < _num_receive_contexts; i++)
       {

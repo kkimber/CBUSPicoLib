@@ -74,8 +74,6 @@ TEST(CBUSLED, systemTime)
    // Test clamp to 32-bits
    sysTime = 0x1FFFFFFFF;
    EXPECT_EQ(SystemTick::GetMilli(), (uint32_t)sysTime);
-
-
 }
 
 // Lets us pin 1 as the LED pin

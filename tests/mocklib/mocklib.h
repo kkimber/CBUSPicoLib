@@ -73,7 +73,6 @@ public:
     // flash functions
     virtual void flash_range_erase (uint32_t, size_t) = 0;
     virtual void flash_range_program (uint32_t, const uint8_t *data, size_t) = 0;
-
 };
 
 class MockPicoSdk : public PicoSdkInterface
@@ -114,7 +113,6 @@ public:
 
     MOCK_METHOD(void, flash_range_erase, (uint32_t, size_t), (override));
     MOCK_METHOD(void, flash_range_program, (uint32_t, const uint8_t *data, size_t), (override));
-
 };
 
 class MockPicoSdkApi

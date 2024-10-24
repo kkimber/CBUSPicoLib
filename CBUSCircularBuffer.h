@@ -47,7 +47,6 @@
 
 class CANFrame
 {
-
 public:
    /// CAN Frame ID
    uint32_t id = {};
@@ -75,7 +74,6 @@ typedef struct
 
 class CBUSCircularBuffer
 {
-
 public:
    explicit CBUSCircularBuffer(uint8_t num_items);
    ~CBUSCircularBuffer();

@@ -1014,7 +1014,6 @@ TEST(CBUS, testFLiM_Events)
    canRxFrame = {.len=7, .data{OPC_ACOF3, othNNHi, othNNLo, 5, 5, 5, 5}};
    mockAddRxFrame(canRxFrame);
    cbus.process();
-
 }
 
 //-----------------------------------------------------------------------------

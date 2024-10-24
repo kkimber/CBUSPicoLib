@@ -47,7 +47,6 @@
 
 class CBUSSwitch
 {
-
 public:
    CBUSSwitch();
    void setPin(const uint8_t pin, const bool pressedState);

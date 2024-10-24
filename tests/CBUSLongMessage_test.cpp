@@ -399,7 +399,6 @@ TEST(CBUSLongMessageEx, sendMsg)
 
    // Try to send one more
    ASSERT_FALSE(longMsg.sendLongMessage(msg2, msgLen, numContext + 1, priority));
-
 }
 
 TEST(CBUSLongMessageEx, receive)

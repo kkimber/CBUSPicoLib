@@ -74,7 +74,6 @@ enum class EEPROM_TYPE
 
 class CBUSConfig
 {
-
 public:
    CBUSConfig();
    ~CBUSConfig();
