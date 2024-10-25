@@ -26,7 +26,7 @@
     </tr>
     <tr>
       <th scope="row">Date:</th>
-      <td>2024-10-25 12:20:46</td>
+      <td>2024-10-25 20:21:10</td>
     </tr>
   </table>
 </div>
@@ -73,9 +73,9 @@
     <tr><td><a href="#l27">gpio_get(unsigned int) (line 27)</a></td><td>called 8490 times</td><td>100.0%</td></tr>
     <tr><td><a href="#l22">gpio_init(unsigned int) (line 22)</a></td><td>called 9 times</td><td>100.0%</td></tr>
     <tr><td><a href="#l37">gpio_pull_down(unsigned int) (line 37)</a></td><td>not called</td><td>0.0%</td></tr>
-    <tr><td><a href="#l53">gpio_put(unsigned int, bool) (line 53)</a></td><td>called 42 times</td><td>100.0%</td></tr>
+    <tr><td><a href="#l52">gpio_put(unsigned int, bool) (line 52)</a></td><td>called 42 times</td><td>100.0%</td></tr>
     <tr><td><a href="#l32">gpio_set_dir(unsigned int, bool) (line 32)</a></td><td>called 9 times</td><td>100.0%</td></tr>
-    <tr><td><a href="#l58">gpio_set_function(unsigned int, unsigned char) (line 58)</a></td><td>called 4 times</td><td>100.0%</td></tr>
+    <tr><td><a href="#l57">gpio_set_function(unsigned int, unsigned char) (line 57)</a></td><td>called 4 times</td><td>100.0%</td></tr>
     <tr><td><a href="#l42">gpio_set_pulls(unsigned int, bool, bool) (line 42)</a></td><td>called 4 times</td><td>100.0%</td></tr>
     <tr><td><a href="#l47">gpio_set_slew_rate(unsigned int, gpio_slew_rate) (line 47)</a></td><td>not called</td><td>0.0%</td></tr>
   </table>
@@ -117,7 +117,7 @@
       <td class="linebranch">
       </td>
       <td class="linecount "></td>
-      <td class="src "><span class="cm">Copyright (C) 2023 Slava Zanko</span></td>
+      <td class="src "><span class="cm">Copyright (c) 2023 Slava Zanko</span></td>
     </tr>
     <tr class="source-line">
       <td class="lineno"><a id="l5" href="#l5">5</a></td>
@@ -431,102 +431,95 @@
       <td class="lineno"><a id="l49" href="#l49">49</a></td>
       <td class="linebranch">
       </td>
-      <td class="linecount "></td>
-      <td class="src "></td>
+      <td class="linecount uncoveredLine">&cross;</td>
+      <td class="src uncoveredLine"><span class="w">    </span><span class="n">mockPicoSdkApi</span><span class="p">.</span><span class="n">mockPicoSdk</span><span class="o">-&gt;</span><span class="n">gpio_set_slew_rate</span><span class="p">(</span><span class="n">gpio</span><span class="p">,</span><span class="w"> </span><span class="n">slew</span><span class="p">);</span></td>
     </tr>
     <tr class="source-line">
       <td class="lineno"><a id="l50" href="#l50">50</a></td>
       <td class="linebranch">
       </td>
       <td class="linecount uncoveredLine">&cross;</td>
-      <td class="src uncoveredLine"><span class="w">    </span><span class="n">mockPicoSdkApi</span><span class="p">.</span><span class="n">mockPicoSdk</span><span class="o">-&gt;</span><span class="n">gpio_set_slew_rate</span><span class="p">(</span><span class="n">gpio</span><span class="p">,</span><span class="w"> </span><span class="n">slew</span><span class="p">);</span></td>
-    </tr>
-    <tr class="source-line">
-      <td class="lineno"><a id="l51" href="#l51">51</a></td>
-      <td class="linebranch">
-      </td>
-      <td class="linecount uncoveredLine">&cross;</td>
       <td class="src uncoveredLine"><span class="p">}</span></td>
     </tr>
     <tr class="source-line">
-      <td class="lineno"><a id="l52" href="#l52">52</a></td>
+      <td class="lineno"><a id="l51" href="#l51">51</a></td>
       <td class="linebranch">
       </td>
       <td class="linecount "></td>
       <td class="src "></td>
     </tr>
     <tr class="source-line">
-      <td class="lineno"><a id="l53" href="#l53">53</a></td>
+      <td class="lineno"><a id="l52" href="#l52">52</a></td>
       <td class="linebranch">
       </td>
       <td class="linecount coveredLine">42</td>
       <td class="src coveredLine"><span class="kt">void</span><span class="w"> </span><span class="nf">gpio_put</span><span class="p">(</span><span class="n">uint</span><span class="w"> </span><span class="n">gpio</span><span class="p">,</span><span class="w"> </span><span class="kt">bool</span><span class="w"> </span><span class="n">value</span><span class="p">)</span></td>
     </tr>
     <tr class="source-line">
-      <td class="lineno"><a id="l54" href="#l54">54</a></td>
+      <td class="lineno"><a id="l53" href="#l53">53</a></td>
       <td class="linebranch">
       </td>
       <td class="linecount "></td>
       <td class="src "><span class="p">{</span></td>
     </tr>
     <tr class="source-line">
-      <td class="lineno"><a id="l55" href="#l55">55</a></td>
+      <td class="lineno"><a id="l54" href="#l54">54</a></td>
       <td class="linebranch">
       </td>
       <td class="linecount coveredLine">42</td>
       <td class="src coveredLine"><span class="w">    </span><span class="n">mockPicoSdkApi</span><span class="p">.</span><span class="n">mockPicoSdk</span><span class="o">-&gt;</span><span class="n">gpio_put</span><span class="p">(</span><span class="n">gpio</span><span class="p">,</span><span class="w"> </span><span class="n">value</span><span class="p">);</span></td>
     </tr>
     <tr class="source-line">
-      <td class="lineno"><a id="l56" href="#l56">56</a></td>
+      <td class="lineno"><a id="l55" href="#l55">55</a></td>
       <td class="linebranch">
       </td>
       <td class="linecount coveredLine">42</td>
       <td class="src coveredLine"><span class="p">}</span></td>
     </tr>
     <tr class="source-line">
-      <td class="lineno"><a id="l57" href="#l57">57</a></td>
+      <td class="lineno"><a id="l56" href="#l56">56</a></td>
       <td class="linebranch">
       </td>
       <td class="linecount "></td>
       <td class="src "></td>
     </tr>
     <tr class="source-line">
-      <td class="lineno"><a id="l58" href="#l58">58</a></td>
+      <td class="lineno"><a id="l57" href="#l57">57</a></td>
       <td class="linebranch">
       </td>
       <td class="linecount coveredLine">4</td>
       <td class="src coveredLine"><span class="kt">void</span><span class="w"> </span><span class="nf">gpio_set_function</span><span class="p">(</span><span class="n">uint</span><span class="w"> </span><span class="n">gpio</span><span class="p">,</span><span class="w"> </span><span class="n">gpio_function_t</span><span class="w"> </span><span class="n">fn</span><span class="p">)</span></td>
     </tr>
     <tr class="source-line">
-      <td class="lineno"><a id="l59" href="#l59">59</a></td>
+      <td class="lineno"><a id="l58" href="#l58">58</a></td>
       <td class="linebranch">
       </td>
       <td class="linecount "></td>
       <td class="src "><span class="p">{</span></td>
     </tr>
     <tr class="source-line">
-      <td class="lineno"><a id="l60" href="#l60">60</a></td>
+      <td class="lineno"><a id="l59" href="#l59">59</a></td>
       <td class="linebranch">
       </td>
       <td class="linecount coveredLine">4</td>
       <td class="src coveredLine"><span class="w">    </span><span class="n">mockPicoSdkApi</span><span class="p">.</span><span class="n">mockPicoSdk</span><span class="o">-&gt;</span><span class="n">gpio_set_function</span><span class="p">(</span><span class="n">gpio</span><span class="p">,</span><span class="w"> </span><span class="n">fn</span><span class="p">)</span><span class="w"> </span><span class="p">;</span></td>
     </tr>
     <tr class="source-line">
-      <td class="lineno"><a id="l61" href="#l61">61</a></td>
+      <td class="lineno"><a id="l60" href="#l60">60</a></td>
       <td class="linebranch">
       </td>
       <td class="linecount coveredLine">4</td>
       <td class="src coveredLine"><span class="p">}</span></td>
     </tr>
     <tr class="source-line">
-      <td class="lineno"><a id="l62" href="#l62">62</a></td>
+      <td class="lineno"><a id="l61" href="#l61">61</a></td>
       <td class="linebranch">
       </td>
       <td class="linecount "></td>
       <td class="src "></td>
     </tr>
     <tr class="source-line">
-      <td class="lineno"><a id="l63" href="#l63">63</a></td>
+      <td class="lineno"><a id="l62" href="#l62">62</a></td>
       <td class="linebranch">
       </td>
       <td class="linecount "></td>
