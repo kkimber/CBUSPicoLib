@@ -86,16 +86,16 @@ public:
    void put(const CANFrame &cf);
    CANFrame *peek(void);
    CANFrame *get(void);
-   uint32_t insert_time(void);
+   uint32_t getInsertTime(void);
    bool full(void);
    void clear(void);
    bool empty(void);
    uint8_t size(void);
-   uint8_t free_slots(void);
-   uint32_t puts(void);
-   uint32_t gets(void);
-   uint8_t highWaterMark(void);
-   uint32_t overflows(void);
+   uint8_t getNumFreeSlots(void);
+   uint32_t getNumPuts(void);
+   uint32_t getNumGets(void);
+   uint8_t getHighWaterMark(void);
+   uint32_t getNumOverflows(void);
 
 private:
    bool m_full;

@@ -57,10 +57,10 @@ TEST(CBUSCircularBuffer, noInit)
    CANFrame frame;
    buffer.put(frame);
 
-   ASSERT_EQ(buffer.free_slots(), numItems);
+   ASSERT_EQ(buffer.getNumFreeSlots(), numItems);
    ASSERT_EQ(buffer.get(), nullptr);
    ASSERT_EQ(buffer.peek(), nullptr);
-   ASSERT_EQ(buffer.insert_time(), 0);
+   ASSERT_EQ(buffer.getInsertTime(), 0);
 }
 
 // Initialization test
@@ -103,12 +103,12 @@ TEST(CBUSCircularBuffer, basicUsage)
    CANFrame* peekFrame = buffer.peek();
    ASSERT_EQ(peekFrame->id, frameID);
    ASSERT_EQ(buffer.size(), 1);
-   ASSERT_EQ(buffer.insert_time(), sysTime);
+   ASSERT_EQ(buffer.getInsertTime(), sysTime);
 
    // Clear the buffer
    buffer.clear();
    ASSERT_EQ(buffer.size(), 0);
-   ASSERT_EQ(buffer.free_slots(), numItems);
+   ASSERT_EQ(buffer.getNumFreeSlots(), numItems);
    ASSERT_FALSE(buffer.full());
    ASSERT_TRUE(buffer.empty());
 
@@ -124,8 +124,8 @@ TEST(CBUSCircularBuffer, basicUsage)
    ASSERT_EQ(buffer.peek(), nullptr);
 
    ASSERT_TRUE(buffer.empty());
-   ASSERT_EQ(buffer.puts(), 2);
-   ASSERT_EQ(buffer.gets(), 1);
+   ASSERT_EQ(buffer.getNumPuts(), 2);
+   ASSERT_EQ(buffer.getNumGets(), 1);
 }
 
 // Advanced usage test
@@ -147,7 +147,7 @@ TEST(CBUSCircularBuffer, advancedUsage)
       frame.id = i;
       buffer.put(frame);
       ASSERT_EQ(buffer.size(), i + 1);
-      ASSERT_EQ(buffer.highWaterMark(), i + 1);
+      ASSERT_EQ(buffer.getHighWaterMark(), i + 1);
    }
 
    ASSERT_TRUE(buffer.full());
@@ -162,9 +162,9 @@ TEST(CBUSCircularBuffer, advancedUsage)
    }
 
    ASSERT_TRUE(buffer.empty());
-   ASSERT_EQ(buffer.puts(), numItems);
-   ASSERT_EQ(buffer.gets(), numItems);
-   ASSERT_EQ(buffer.highWaterMark(), numItems);
+   ASSERT_EQ(buffer.getNumPuts(), numItems);
+   ASSERT_EQ(buffer.getNumGets(), numItems);
+   ASSERT_EQ(buffer.getHighWaterMark(), numItems);
 }
 
 // Overflow test
@@ -209,7 +209,7 @@ TEST(CBUSCircularBuffer, overflow)
    buffer.put(frame);
 
    ASSERT_EQ(buffer.size(), 2);
-   ASSERT_EQ(buffer.overflows(), 1);
+   ASSERT_EQ(buffer.getNumOverflows(), 1);
 
    // Peek first available frame, should now be the second inserted
    peekFrame = buffer.peek();
@@ -231,9 +231,9 @@ TEST(CBUSCircularBuffer, overflow)
 
    // Should now be empty
    ASSERT_TRUE(buffer.empty());
-   ASSERT_EQ(buffer.puts(), 3);
-   ASSERT_EQ(buffer.gets(), 2);
-   ASSERT_EQ(buffer.overflows(), 1);
+   ASSERT_EQ(buffer.getNumPuts(), 3);
+   ASSERT_EQ(buffer.getNumGets(), 2);
+   ASSERT_EQ(buffer.getNumOverflows(), 1);
 }
 
 int main(int argc, char **argv)
