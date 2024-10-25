@@ -45,6 +45,7 @@ jobs:
     - name: Add artifacts to publish
       run: |
          cd downloads
+         cp ${{github.workspace}}/docs/* .
          cp ${{github.workspace}}/coverage.* .
          cd ..
     - name: Upload build artifacts
