@@ -1,9 +1,9 @@
 /*
    CBUS Module Library - RasberryPi Pico SDK port
-   Copyright (c) Kevin Kimber 2023
+   Copyright (c) Kevin Kimber 2024
 
    Based on work by Duncan Greenwood
-   Copyright (C) Duncan Greenwood 2017 (duncan_greenwood@hotmail.com)
+   Copyright (c) Duncan Greenwood 2017 (duncan_greenwood@hotmail.com)
 
    This work is licensed under the:
       Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International License.

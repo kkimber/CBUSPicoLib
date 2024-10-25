@@ -1,7 +1,7 @@
 
 /*
 This file is part of the SmartFilamentSensor distribution
-Copyright (C) 2023 Slava Zanko
+Copyright (c) 2023 Slava Zanko
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -46,7 +46,6 @@ void gpio_set_pulls(uint gpio, bool up, bool down)
 
 void gpio_set_slew_rate(uint gpio, enum gpio_slew_rate slew)
 {
-
     mockPicoSdkApi.mockPicoSdk->gpio_set_slew_rate(gpio, slew);
 }
 

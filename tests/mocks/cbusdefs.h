@@ -9,7 +9,7 @@ extern "C" {
 #endif
 
 // 		
-// 		Copyright (C) Pete Brownlow 2011-2022   software@upsys.co.uk
+// 		Copyright (c) Pete Brownlow 2011-2022   software@upsys.co.uk
 // 		Originally derived from opcodes.h (c) Andrew Crosland.
 // 		CSV version by Ian Hogg inspired by David W Radcliffe
 // 		
