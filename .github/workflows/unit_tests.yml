@@ -15,7 +15,10 @@ jobs:
     steps:
     #- name: Install gtest manually
     #  run: sudo apt-get install libgtest-dev && cd /usr/src/gtest && sudo cmake CMakeLists.txt && sudo make && sudo cp lib/*.a /usr/lib && sudo ln -s /usr/lib/libgtest.a /usr/local/lib/libgtest.a && sudo ln -s /usr/lib/libgtest_main.a /usr/local/lib/libgtest_main.a
-    - uses: actions/checkout@v1
+    - uses: actions/checkout@v3
+    - name: Checkout Submodules
+      working-directory: ${{github.workspace}}
+      run: git submodule update --init
     - name: configure
       run: mkdir build && cd build && cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_FLAGS="-Werror" ..
     - name: make
@@ -34,8 +37,8 @@ jobs:
       with:
          root: ${{github.workspace}}
          excludes: |
-            'build*'
-            'tests*'
+            build*
+            tests*
          html-out: coverage.html
          html-title: CBUSPicoLib Test Coverage Report
          html-details: true

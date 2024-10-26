@@ -5,7 +5,7 @@ project(tests)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 set(CMAKE_DEFAULT_STARTUP_PROJECT CBUSLEDtest)
 
-include_directories("..")
+include_directories(.. ../external/cbusdefs)
 
 add_subdirectory(mocklib)
 
