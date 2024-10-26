@@ -19,8 +19,8 @@ execute_process(COMMAND "${CMAKE_COMMAND}" --build .
 set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
 
 # Set compiler options for gcov profiling
-SET(CMAKE_CXX_FLAGS "-g -O0 --coverage -fprofile-arcs -ftest-coverage -fprofile-abs-path")
-SET(CMAKE_C_FLAGS "-g -O0 --coverage -fprofile-arcs -ftest-coverage -fprofile-abs-path")
+SET(CMAKE_CXX_FLAGS "-g -O0 --coverage")
+SET(CMAKE_C_FLAGS "-g -O0 --coverage")
  
 # Add googletest directly to our build. This adds
 # the following targets: gtest, gtest_main, gmock

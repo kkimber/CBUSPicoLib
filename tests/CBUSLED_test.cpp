@@ -92,6 +92,12 @@ TEST(CBUSLED, init)
 
    CBUSLED led;
 
+   // Run before configuring
+   led.run();
+
+   // LED should be OFF
+   ASSERT_FALSE(led.getState());
+   
    // Check initialization - LED should be OFF
    led.setPin(pinLED);
    ASSERT_FALSE(led.getState());
