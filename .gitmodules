@@ -1,0 +1,3 @@
+[submodule "external/cbusdefs"]
+	path = external/cbusdefs
+	url = https://github.com/MERG-DEV/cbusdefs
