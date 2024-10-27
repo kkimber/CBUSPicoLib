@@ -198,27 +198,6 @@ void CBUSCircularBuffer::clear(void)
 }
 
 ///
-/// @brief Get the high water mark of the circular buffer
-///
-/// @return uint8_t maximum number of items seen in the circular buffer
-///
-uint8_t CBUSCircularBuffer::getHighWaterMark(void)
-{
-   return m_highWaterMark;
-}
-
-///
-/// @brief Determine if the circular buffer is full
-///
-/// @return true if the circular buffer is full
-/// @return false if the circular buffer is not full
-///
-bool CBUSCircularBuffer::full(void)
-{
-   return m_full;
-}
-
-///
 /// @brief Recalculate the number of items in the buffer
 ///
 /// @return uint8_t Number of items currently in the circular buffer
@@ -252,44 +231,4 @@ uint8_t CBUSCircularBuffer::size(void)
 bool CBUSCircularBuffer::empty(void)
 {
    return (!m_full && (m_head == m_tail));
-}
-
-///
-/// @brief Determines the number of free entries left in the circular buffer
-///
-/// @return uint8_t number of entries left in the circular buffer
-///
-uint8_t CBUSCircularBuffer::getNumFreeSlots(void)
-{
-   return (m_capacity - m_size);
-}
-
-///
-/// @brief Retrieve the number of insertions into the circular buffer
-///
-/// @return uint32_t number of insertions
-///
-uint32_t CBUSCircularBuffer::getNumPuts(void)
-{
-   return m_puts;
-}
-
-///
-/// @brief Retrieve the number of retrievals from the circular buffer
-///
-/// @return uint32_t number of retrievals
-///
-uint32_t CBUSCircularBuffer::getNumGets(void)
-{
-   return m_gets;
-}
-
-///
-/// @brief Retrieve the number of times the circular buffer overflowed
-///
-/// @return uint32_t number of circular buffer overflows
-///
-uint32_t CBUSCircularBuffer::getNumOverflows(void)
-{
-   return m_overflows;
 }

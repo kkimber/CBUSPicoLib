@@ -87,15 +87,52 @@ public:
    CANFrame *peek(void);
    CANFrame *get(void);
    uint32_t getInsertTime(void);
-   bool full(void);
    void clear(void);
-   bool empty(void);
    uint8_t size(void);
-   uint8_t getNumFreeSlots(void);
-   uint32_t getNumPuts(void);
-   uint32_t getNumGets(void);
-   uint8_t getHighWaterMark(void);
-   uint32_t getNumOverflows(void);
+   bool empty(void);
+
+   ///
+   /// @brief Determine if the circular buffer is full
+   ///
+   /// @return true if the circular buffer is full
+   /// @return false if the circular buffer is not full
+   ///
+   inline bool full(void) {return m_full;}
+
+   ///
+   /// @brief Determines the number of free entries left in the circular buffer
+   ///
+   /// @return uint8_t number of entries left in the circular buffer
+   ///
+   inline uint8_t getNumFreeSlots(void) {return (m_capacity - m_size);}
+
+   ///
+   /// @brief Retrieve the number of insertions into the circular buffer
+   ///
+   /// @return uint32_t number of insertions
+   ///
+   inline uint32_t getNumPuts(void) {return m_puts;}
+
+   ///
+   /// @brief Retrieve the number of retrievals from the circular buffer
+   ///
+   /// @return uint32_t number of retrievals
+   ///
+   inline uint32_t getNumGets(void) {return m_gets;}
+
+   ///
+   /// @brief Get the high water mark of the circular buffer
+   ///
+   /// @return uint8_t maximum number of items seen in the circular buffer
+   ///
+   inline uint8_t getHighWaterMark(void) {return m_highWaterMark;}
+
+   ///
+   /// @brief Retrieve the number of times the circular buffer overflowed
+   ///
+   /// @return uint32_t number of circular buffer overflows
+   ///
+   inline uint32_t getNumOverflows(void) {return m_overflows;}
 
 private:
    bool m_full;
